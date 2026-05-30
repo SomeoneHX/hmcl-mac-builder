@@ -1,0 +1,8 @@
+build/
+output/
+test-output/
+*.dmg
+.DS_Store
+.qtcreator/
+*.user
+*.user.*
