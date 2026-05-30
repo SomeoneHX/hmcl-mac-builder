@@ -14,7 +14,7 @@ bool GenerateLauncherScript(const fs::path& outputPath, const std::string& appNa
     script << "fi\n";
     script << "cd \"$HOME\"\n";
     script << "if [ ! -x /usr/bin/java ]; then\n";
-    script << "  osascript -e 'tell app \"System Events\" to display dialog \"无法找到 Java 运行环境，请确保 /usr/bin/java 能够正确运行\" buttons {\"确定\"} default button \"确定\" with title \"HMCL\" with icon stop'\n";
+    script << "  osascript -e 'display dialog \"无法找到 Java 运行环境，请确保 /usr/bin/java 能够正确运行\" buttons {\"确定\"} default button \"确定\" with title \"HMCL\" with icon stop'\n";
     script << "  exit 1\n";
     script << "fi\n";
     script << "exec /usr/bin/java -jar \"$JAR\"\n";
