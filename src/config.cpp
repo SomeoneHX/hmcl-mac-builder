@@ -91,6 +91,8 @@ bool ParseArgs(int argc, char* argv[], Config& config) {
                 return false;
             }
             config.proxyUrl = argv[++i];
+        } else if (IsFlag(argc, argv, i, "", "--skip-licenses")) {
+            config.skipLicenses = true;
         } else if (IsFlag(argc, argv, i, "", "--verbose")) {
             config.verbose = true;
         } else {

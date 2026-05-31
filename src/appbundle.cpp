@@ -1,4 +1,3 @@
-// appbundle.cpp — 构建 .app 目录结构、生成 Info.plist、复制资源、可选打包 Java
 #include "appbundle.h"
 #include "javabundle.h"
 #include "utils.h"
@@ -89,7 +88,8 @@ static bool WriteInfoPlist(const fs::path& plistPath, const std::string& appName
 bool CreateAppBundle(const Config& config, const fs::path& jarPath,
                      const fs::path& icnsPath, const fs::path& launcherPath,
                      const std::string& version, const BuildInfo& buildInfo,
-                     bool verbose, const fs::path& javaHome) {
+                     bool verbose, const fs::path& javaHome,
+                     const LicenseInfo& licenseInfo) {
     fs::path appDir = config.outputDir / (config.appName + ".app");
     fs::path contentsDir = appDir / "Contents";
     fs::path macosDir = contentsDir / "MacOS";
@@ -142,6 +142,23 @@ bool CreateAppBundle(const Config& config, const fs::path& jarPath,
     } catch (const fs::filesystem_error& e) {
         LOG_ERROR("Failed to copy launcher: {}", e.what());
         return false;
+    }
+
+    // 复制开源协议文件到 Resources/licenses/
+    if (licenseInfo.valid() && fs::exists(licenseInfo.licensesDir)) {
+        fs::path licensesDest = resourcesDir / "licenses";
+        fs::create_directories(licensesDest);
+        try {
+            for (auto& entry : fs::directory_iterator(licenseInfo.licensesDir)) {
+                fs::path dest = licensesDest / entry.path().filename();
+                fs::copy_file(entry.path(), dest, fs::copy_options::overwrite_existing);
+                LOG_VERBOSE("Copied license " << entry.path().filename() << " to " << dest, verbose);
+            }
+        } catch (const fs::filesystem_error& e) {
+            LOG_WARNING("Failed to copy license files: {}", e.what());
+        }
+    } else {
+        LOG_VERBOSE("No license files to copy (not valid or dir missing)", verbose);
     }
 
     // 可选：打包 Java 运行时的 Contents/Java 目录

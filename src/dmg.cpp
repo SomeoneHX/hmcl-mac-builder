@@ -1,10 +1,8 @@
-// dmg.cpp — 使用 create-dmg 生成 macOS DMG 安装包
 #include "dmg.h"
 #include "utils.h"
 #include <iostream>
 #include <sstream>
 
-// 调用 create-dmg 工具创建 DMG：设置卷名、窗口布局、应用图标和拖拽链接
 bool CreateDMG(const Config& config, const std::string& version, bool verbose, const std::string& javaVersion, const std::string& javaArchitecture) {
     // 检查 create-dmg 是否已安装
     if (!Which("create-dmg")) {
@@ -30,7 +28,6 @@ bool CreateDMG(const Config& config, const std::string& version, bool verbose, c
         return false;
     }
 
-    // 构造 create-dmg 命令参数（escape 用户输入防注入）
     std::ostringstream cmd;
     cmd << "create-dmg";
     cmd << " --volname \"" << EscapeShellArg(config.appName) << " Installer\"";
@@ -44,6 +41,7 @@ bool CreateDMG(const Config& config, const std::string& version, bool verbose, c
     LOG_VERBOSE("Running: create-dmg for " << dmgPath, verbose);
 
     int rc = RunCommand(cmd.str(), verbose);
+
     if (rc != 0) {
         LOG_ERROR("create-dmg failed with exit code {}", rc);
         return false;

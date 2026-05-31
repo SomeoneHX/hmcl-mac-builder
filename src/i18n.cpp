@@ -14,6 +14,7 @@ static const std::string en_usage =
     "  --tag VERSION         HMCL version tag (default: latest stable)\n"
     "  --no-dmg              Only generate .app, skip DMG\n"
     "  --skip-icon           Skip icon conversion\n"
+    "  --skip-licenses       Skip downloading and including license files\n"
     "  --clean               Clean previous build files\n"
     "  --proxy URL           Use proxy for GitHub requests (e.g. https://v4.gh-proxy.org/)\n"
     "  --keep-temp           Keep temporary files\n"
@@ -34,6 +35,7 @@ static const std::string zh_usage =
     "  --tag VERSION         HMCL 版本标签（默认: 最新稳定版）\n"
     "  --no-dmg              仅生成 .app，跳过 DMG\n"
     "  --skip-icon           跳过图标转换\n"
+    "  --skip-licenses       跳过开源协议下载与包含\n"
     "  --clean               清理之前的构建文件\n"
     "  --proxy URL           GitHub 下载代理（如 https://v4.gh-proxy.org/）\n"
     "  --keep-temp           保留临时文件\n"
@@ -134,6 +136,28 @@ static const std::map<std::string, std::string> zh_strings = {
     {"Java runtime bundled successfully", "Java 运行时打包成功"},
     {"Failed to bundle Java runtime", "Java 运行时打包失败"},
     {"--java-path requires a path argument", "--java-path 需要路径参数"},
+
+    // 开源协议相关
+    {"Downloading open-source licenses...", "正在下载开源协议文件..."},
+    {"Skipping license download", "跳过协议下载"},
+    {"Downloading HMCL license...", "正在下载 HMCL 开源协议..."},
+    {"HMCL license downloaded to {}", "HMCL 协议已下载到 {}"},
+    {"Failed to download HMCL license, continuing without it.",
+     "下载 HMCL 协议失败，将继续而不包含协议文件。"},
+    {"OpenJDK license copied from {}", "OpenJDK 协议已从 {} 复制"},
+    {"Failed to copy OpenJDK license: {}", "复制 OpenJDK 协议失败: {}"},
+    {"OpenJDK LICENSE not found at {}, skipping.", "未在 {} 找到 OpenJDK 协议，跳过。"},
+    {"Failed to copy license files: {}", "复制协议文件失败: {}"},
+    {"No license files to copy", "没有协议文件需要复制"},
+    {"OpenJDK LICENSE not found locally, downloading from GitHub...",
+     "本地未找到 OpenJDK 协议，正在从 GitHub 下载..."},
+    {"OpenJDK license downloaded from GitHub", "OpenJDK 协议已从 GitHub 下载"},
+    {"Failed to download OpenJDK license from GitHub",
+     "从 GitHub 下载 OpenJDK 协议失败"},
+    {"ASSEMBLY_EXCEPTION not found locally, downloading from GitHub...",
+     "本地未找到 ASSEMBLY_EXCEPTION，正在从 GitHub 下载..."},
+    {"Failed to download ASSEMBLY_EXCEPTION from GitHub",
+     "从 GitHub 下载 ASSEMBLY_EXCEPTION 失败"},
 };
 
 // 根据 LANG 环境变量自动检测语言

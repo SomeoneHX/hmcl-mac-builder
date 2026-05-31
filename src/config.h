@@ -40,6 +40,7 @@ struct Config {
     bool skipIcon = false;                              // 跳过图标处理
     bool clean = false;                                 // 仅清理输出目录
     bool keepTemp = false;                              // 保留临时文件
+    bool skipLicenses = false;                          // 跳过开源协议下载与包含
     bool verbose = false;                               // 启用详细日志输出
 };
 

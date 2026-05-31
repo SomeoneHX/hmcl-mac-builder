@@ -1,6 +1,6 @@
 // main.cpp — 程序入口，编排整个构建流程：
-//   解析参数 → 获取 HMCL JAR → 生成图标 → 检测 Java → 生成启动脚本 →
-//   打包 .app → 创建 DMG → 清理临时文件
+//   解析参数 → 获取 HMCL JAR → 生成图标 → 检测 Java → 下载协议 →
+//   生成启动脚本 → 打包 .app → 创建 DMG → 清理临时文件
 #include "config.h"
 #include "version.h"
 #include "utils.h"
@@ -10,6 +10,7 @@
 #include "appbundle.h"
 #include "javabundle.h"
 #include "dmg.h"
+#include "license.h"
 #include <iostream>
 #include <future>
 #include <cstdlib>
@@ -236,30 +237,39 @@ int main(int argc, char* argv[]) {
         javaHome = javaInfo.javaHome.string();
     }
 
-    // 阶段 6：采集构建元信息
+    // 阶段 6：下载开源协议文件（可选跳过）
+    LicenseInfo licenseInfo;
+    if (!config.skipLicenses) {
+        LOG_INFO("Downloading open-source licenses...");
+        licenseInfo = DownloadLicenses(tempDir.path(), config.bundleJava, javaHome, config.proxyUrl);
+    } else {
+        LOG_VERBOSE("Skipping license download", config.verbose);
+    }
+
+    // 阶段 7：采集构建元信息
     BuildInfo buildInfo = CollectBuildInfo(config, javaInfo);
 
-    // 阶段 7：生成启动脚本
+    // 阶段 8：生成启动脚本
     LOG_INFO("Generating launcher script...");
     if (!GenerateLauncherScript(launcherPath, config.appName, version, buildInfo, config.bundleJava)) {
         LOG_ERROR("Failed to generate launcher script");
         return EXIT_FAILURE;
     }
 
-    // 阶段 8：组装 .app 包
+    // 阶段 9：组装 .app 包
     LOG_INFO("Creating app bundle...");
-    if (!CreateAppBundle(config, jarPath, icnsPath, launcherPath, version, buildInfo, config.verbose, javaHome)) {
+    if (!CreateAppBundle(config, jarPath, icnsPath, launcherPath, version, buildInfo, config.verbose, javaHome, licenseInfo)) {
         LOG_ERROR("Failed to create app bundle");
         return EXIT_FAILURE;
     }
 
-    // 阶段 9：创建 DMG（可选）
+    // 阶段 10：创建 DMG（可选）
     if (!config.noDmg) {
         LOG_INFO("Creating DMG...");
         CreateDMG(config, version, config.verbose, buildInfo.javaVersion, buildInfo.javaArchitecture);
     }
 
-    // 阶段 10：清理临时文件
+    // 阶段 11：清理临时文件
     if (!config.keepTemp) {
         LOG_VERBOSE("Cleaning up temporary directory", config.verbose);
     } else {

@@ -58,6 +58,12 @@
 - **Shell 注入防护**：`EscapeShellArg` 函数转义 `"`、`\`、`` ` ``、`$` 特殊字符，防止命令注入
 - **灵活的命令执行**：`RunCommand`（`system()` 封装，支持静默模式）和 `RunCommandCapture`（`popen` 封装，捕获输出）双模式
 
+### 开源协议自动包含
+- **HMCL 协议（必需）**：自动从 [HMCL 官方仓库](https://github.com/HMCL-dev/HMCL) 下载 GPL-3.0 协议文本，放入 `.app/Contents/Resources/licenses/HMCL-LICENSE`
+- **OpenJDK 协议（可选）**：使用 `--bundle-java` 时，自动从本地 `$JAVA_HOME/LICENSE` 复制 OpenJDK 的 GPLv2+CE 协议；本地不存在时从 [openjdk/jdk](https://github.com/openjdk/jdk) 仓库下载。协议文件位于 `.app/Contents/Resources/licenses/OPENJDK-LICENSE`
+- **跳过选项**：通过 `--skip-licenses` 可完全跳过协议下载与包含
+- **代理支持**：协议下载使用 `--proxy` 参数，与 JAR/图标下载共用代理配置
+
 ### 清理功能
 - `--clean` 选项自动删除输出目录中的 `.app` 文件夹和所有 `.dmg` 文件
 
@@ -122,6 +128,9 @@ cmake --build build
 # 跳过图标处理
 ./build/hmcl-mac-builder --skip-icon
 
+# 跳过开源协议下载与包含
+./build/hmcl-mac-builder --skip-licenses
+
 # 使用 GitHub 下载代理（仅对文件下载生效，API 请求不使用）
 ./build/hmcl-mac-builder --proxy https://gh-proxy.org/
 
@@ -162,6 +171,7 @@ cmake --build build
 | `--bundle-java` | 自动检测本机 Java 17+ 运行时并打包到 `.app/Contents/Java/`。检测策略依次为：用户指定路径 → `$JAVA_HOME` → `/usr/libexec/java_home` → 扫描 `/Library/Java/JavaVirtualMachines` 选最高版本 → 跟踪 `/usr/bin/java` 符号链接 | 不打包 |
 | `--java-path PATH` | 指定要打包的 Java 安装路径（隐含 `--bundle-java`）。支持标准 JDK 目录（`bin/java`）和 macOS `.jdk` 包结构（`Contents/Home/bin/java`） | 自动检测 |
 | `--skip-icon` | 跳过图标下载、PNG 转换和 ICNS 生成步骤。生成的 `.app` 将使用 macOS 默认图标 | 处理图标 |
+| `--skip-licenses` | 跳过开源协议（HMCL-LICENSE、OPENJDK-LICENSE）的下载与包含。生成的 `.app` 中不包含 `Resources/licenses/` 目录 | 自动下载 HMCL 协议；`--bundle-java` 时自动包含 OpenJDK 协议 |
 | `--clean` | 清理之前构建的 `.app` 文件夹和所有 `.dmg` 文件后立即退出，不执行构建 | 不清除 |
 | `--proxy URL` | GitHub 下载代理前缀。仅对文件下载 URL 中包含 `github.com` 或 `githubusercontent.com` 的请求生效，API 查询请求不使用代理 | 不使用 |
 | `--keep-temp` | 构建完成后保留 `/tmp/hmcl-build-XXXXXX` 临时目录中的中间文件（JAR、PNG、iconset 等），便于调试 | 自动删除 |
@@ -179,16 +189,19 @@ flowchart LR
     B --> D[处理图标]
     C & D --> E{--bundle-java?}
     E -- 是 --> F[五层策略检测 Java 17+]
-    F --> G[生成启动脚本<br>使用捆绑 Java]
-    E -- 否 --> H[生成启动脚本<br>使用系统 Java]
-    G & H --> I[组装 .app<br>Info.plist + JAR + ICNS + launch.sh]
-    I --> J{--bundle-java?}
-    J -- 是 --> K[打包 JDK 到 Contents/Java<br>跳过 man/include/jmods/demo/sample]
-    K --> L{--no-dmg?}
-    J -- 否 --> L
-    L -- 否 --> M[create-dmg<br>生成 .dmg]
-    L -- 是 --> N[清理临时文件]
-    M --> N
+    F --> G{--skip-licenses?}
+    E -- 否 --> G
+    G -- 否 --> H[下载 HMCL 协议<br>下载/复制 OpenJDK 协议]
+    G -- 是 --> I[生成启动脚本<br>使用捆绑 Java]
+    H --> I
+    I --> J[组装 .app<br>Info.plist + JAR + ICNS + launch.sh<br>+ licenses/]
+    J --> K{--bundle-java?}
+    K -- 是 --> L[打包 JDK 到 Contents/Java<br>跳过 man/include/jmods/demo/sample]
+    L --> M{--no-dmg?}
+    K -- 否 --> M
+    M -- 否 --> N[create-dmg<br>生成 .dmg]
+    M -- 是 --> O[清理临时文件]
+    N --> O
 ```
 
 > **并行执行**：下载 JAR 与处理图标通过 `std::async` 并发执行，缩短总构建时间。
@@ -204,8 +217,8 @@ hmcl-mac-builder/
 ├── CMakeLists.txt              # CMake 构建配置：C++17、libcurl、nlohmann/json 自动下载
 ├── .gitignore                  # Git 忽略规则（build/、output/、*.dmg 等）
 └── src/
-    ├── main.cpp                # 入口，编排 10 阶段构建流水线（解析参数→下载→打包→清理）
-    ├── config.h / config.cpp   # Config/BuildInfo 结构体、17 个 CLI 参数解析、--help/--version
+    ├── main.cpp                # 入口，编排 11 阶段构建流水线（解析参数→下载→协议→打包→清理）
+    ├── config.h / config.cpp   # Config/BuildInfo 结构体、18 个 CLI 参数解析、--help/--version
     ├── i18n.h / i18n.cpp       # 国际化：中英双语字符串表、LANG 自动检测、ANSI 彩色日志宏
     ├── utils.h / utils.cpp     # 工具函数：RunCommand、RunCommandCapture、Which、WriteFile、
     │                           #   ReadFile、Trim、CaptureOutput、ExtractVersionFromJarName、
@@ -218,6 +231,7 @@ hmcl-mac-builder/
     ├── launcher.h / launcher.cpp # launch.sh 生成：构建元信息注释头、LANG 检测、
     │                             #   osascript 三语错误弹窗、崩溃检测、日志重定向
     ├── javabundle.h / javabundle.cpp # Java 五层检测、版本/架构解析、智能打包（跳过非必需目录）
+    ├── license.h / license.cpp       # 开源协议下载：HMCL GPL-3.0（GitHub）、OpenJDK GPLv2+CE（本地/GitHub）
     ├── appbundle.h / appbundle.cpp   # .app 目录创建、Info.plist 写入（含自定义字段）、
     │                                 #   JAR/ICNS/launch.sh 复制、触发 Java 打包
     └── dmg.h / dmg.cpp         # create-dmg 调用：窗口布局（660x400）、图标和拖拽链接坐标、DMG 命名
@@ -232,11 +246,14 @@ YourApp.app/
     ├── MacOS/
     │   └── launch.sh       # 启动脚本（可执行，含崩溃检测 + 双语错误弹窗）
     ├── Resources/
-    │   ├── YourApp.jar     # HMCL 主程序
-    │   └── YourApp.icns    # macOS 应用图标
-    └── Java/               # （仅 --bundle-java 时存在）
+    │   ├── YourApp.jar         # HMCL 主程序
+    │   ├── YourApp.icns        # macOS 应用图标
+    │   └── licenses/           # 开源协议文件（仅 --skip-licenses 时不存在）
+    │       ├── HMCL-LICENSE           # GPL-3.0，始终包含
+    │       └── OPENJDK-LICENSE        # GPLv2+CE，仅 --bundle-java 时包含
+    └── Java/                   # （仅 --bundle-java 时存在）
         ├── bin/
-        │   └── java        # 捆绑的 Java 运行时
+        │   └── java            # 捆绑的 Java 运行时
         ├── lib/
         └── ...
 ```

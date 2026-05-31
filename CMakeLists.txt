@@ -43,6 +43,8 @@ set(SOURCES
     src/appbundle.cpp
     # Java 打包
     src/javabundle.cpp
+    # 开源协议下载
+    src/license.cpp
     # DMG 生成
     src/dmg.cpp
 )
