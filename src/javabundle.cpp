@@ -32,6 +32,27 @@ static bool GetJavaVersion(const fs::path& javaBinary, std::string& version) {
     return false;
 }
 
+// 检测 Java 二进制文件的架构（aarch64 / x86_64）
+static std::string GetJavaArchitecture(const fs::path& javaBinary) {
+    std::string cmd = "lipo -archs \"" + javaBinary.string() + "\" 2>/dev/null";
+    std::string output;
+    if (RunCommandCapture(cmd, output)) {
+        output.erase(output.find_last_not_of(" \n\r\t") + 1);
+        // 如果是通用二进制，取第一个架构
+        size_t space = output.find(' ');
+        if (space != std::string::npos) {
+            output = output.substr(0, space);
+        }
+        return output;
+    }
+    // fallback: 用 uname -m
+    if (RunCommandCapture("uname -m 2>/dev/null", output)) {
+        output.erase(output.find_last_not_of(" \n\r\t") + 1);
+        return output;
+    }
+    return "";
+}
+
 // 从版本字符串中提取主版本号（如 "17.0.10" → 17）
 static int ParseMajorVersion(const std::string& version) {
     size_t dot = version.find('.');
@@ -73,6 +94,7 @@ static JavaInfo CheckJavaPath(const fs::path& path) {
     if (IsValidJavaHome(javaHome, version)) {
         info.javaHome = javaHome;
         info.version = version;
+        info.architecture = GetJavaArchitecture(javaHome / "bin" / "java");
         info.valid = true;
     }
     return info;

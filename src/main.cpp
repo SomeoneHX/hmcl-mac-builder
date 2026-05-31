@@ -67,6 +67,7 @@ static BuildInfo CollectBuildInfo(const Config& config, const JavaInfo& javaInfo
 
     if (javaInfo.valid) {
         info.javaVersion = javaInfo.version;
+        info.javaArchitecture = javaInfo.architecture;
         info.javaHome = javaInfo.javaHome.string();
     }
 
@@ -255,7 +256,7 @@ int main(int argc, char* argv[]) {
     // 阶段 9：创建 DMG（可选）
     if (!config.noDmg) {
         LOG_INFO("Creating DMG...");
-        CreateDMG(config, version, config.verbose, buildInfo.javaVersion);
+        CreateDMG(config, version, config.verbose, buildInfo.javaVersion, buildInfo.javaArchitecture);
     }
 
     // 阶段 10：清理临时文件

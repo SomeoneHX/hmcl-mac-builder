@@ -5,7 +5,7 @@
 #include <sstream>
 
 // 调用 create-dmg 工具创建 DMG：设置卷名、窗口布局、应用图标和拖拽链接
-bool CreateDMG(const Config& config, const std::string& version, bool verbose, const std::string& javaVersion) {
+bool CreateDMG(const Config& config, const std::string& version, bool verbose, const std::string& javaVersion, const std::string& javaArchitecture) {
     // 检查 create-dmg 是否已安装
     if (!Which("create-dmg")) {
         LOG_WARNING("create-dmg not found. Install with: brew install create-dmg");
@@ -17,6 +17,9 @@ bool CreateDMG(const Config& config, const std::string& version, bool verbose, c
     std::string dmgName = config.appName + "-" + version;
     if (!javaVersion.empty()) {
         dmgName += "-java-" + javaVersion;
+        if (!javaArchitecture.empty()) {
+            dmgName += "-" + javaArchitecture;
+        }
     }
     dmgName += ".dmg";
     fs::path dmgPath = config.outputDir / dmgName;

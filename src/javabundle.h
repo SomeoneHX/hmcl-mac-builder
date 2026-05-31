@@ -7,9 +7,10 @@ namespace fs = std::filesystem;
 
 // JavaInfo: Java 运行时检测结果
 struct JavaInfo {
-    fs::path javaHome;   // JDK 根目录
-    std::string version; // 版本字符串（如 "17.0.10"）
-    bool valid = false;  // 是否找到有效的 Java 17+
+    fs::path javaHome;       // JDK 根目录
+    std::string version;     // 版本字符串（如 "17.0.10"）
+    std::string architecture; // 架构（如 "aarch64", "x86_64"）
+    bool valid = false;      // 是否找到有效的 Java 17+
 };
 
 // 自动检测本机 Java：依次检查用户指定路径 → JAVA_HOME → java_home → /Library/Java → /usr/bin/java

@@ -21,6 +21,7 @@ struct BuildInfo {
     std::string cmakeVersion;     // CMake 版本
     std::string xcodeVersion;     // Xcode 版本
     std::string javaVersion;      // 打包的 Java 版本
+    std::string javaArchitecture; // 打包的 Java 架构（如 aarch64, x86_64）
     std::string javaHome;         // 打包的 Java 路径
     std::string createDmgVersion; // create-dmg 工具版本
 };
