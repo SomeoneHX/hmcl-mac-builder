@@ -27,17 +27,17 @@ bool CreateDMG(const Config& config, const std::string& version, bool verbose, c
         return false;
     }
 
-    // 构造 create-dmg 命令参数
+    // 构造 create-dmg 命令参数（escape 用户输入防注入）
     std::ostringstream cmd;
     cmd << "create-dmg";
-    cmd << " --volname \"" << config.appName << " Installer\"";   // DMG 卷标
-    cmd << " --window-size 660 400";                                // 窗口尺寸
-    cmd << " --icon-size 100";                                      // 图标大小
-    cmd << " --icon \"" << config.appName << ".app\" 160 185";      // 应用图标位置
-    cmd << " --app-drop-link 500 185";                               // Applications 拖拽链接
-    cmd << " \"" << dmgPath.string() << "\"";                       // 输出路径
-    cmd << " \"" << appPath.string() << "\"";                       // 输入 .app 路径
-    cmd << " >/dev/null";                                           // 屏蔽标准输出
+    cmd << " --volname \"" << EscapeShellArg(config.appName) << " Installer\"";
+    cmd << " --window-size 660 400";
+    cmd << " --icon-size 100";
+    cmd << " --icon \"" << EscapeShellArg(config.appName) << ".app\" 160 185";
+    cmd << " --app-drop-link 500 185";
+    cmd << " \"" << EscapeShellArg(dmgPath.string()) << "\"";
+    cmd << " \"" << EscapeShellArg(appPath.string()) << "\"";
+    cmd << " >/dev/null";
 
     LOG_VERBOSE("Running: create-dmg for " << dmgPath, verbose);
 

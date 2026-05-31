@@ -40,7 +40,7 @@ static bool ConvertIcoToPng(const fs::path& icoPath, const fs::path& pngPath, bo
 // 完整图标处理流程：下载 → 转换 PNG → 生成 iconset → 编译为 ICNS
 bool ProcessIcon(const fs::path& outputPath, bool verbose, const std::string& proxyUrl) {
     fs::path tempDir = outputPath.parent_path();
-    fs::path icoPath = tempDir / "HMCL.ico";
+    fs::path icoPath = tempDir / "HMCL.png";
     fs::path iconsetDir = tempDir / "HMCL.iconset";
     fs::path pngBase = tempDir / "HMCL.png";
 

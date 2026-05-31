@@ -40,6 +40,7 @@ static BuildInfo CollectBuildInfo(const Config& config, const JavaInfo& javaInfo
     info.builderVersion = HMCL_MAC_BUILDER_VERSION;
     info.builderName = HMCL_MAC_BUILDER_NAME;
     info.builderRepo = HMCL_MAC_BUILDER_REPO;
+    info.builderLang = config.lang;
 
     std::time_t now = std::time(nullptr);
     char dateBuf[11];
@@ -78,18 +79,28 @@ static BuildInfo CollectBuildInfo(const Config& config, const JavaInfo& javaInfo
 static bool CleanOutput(const Config& config) {
     fs::path appPath = config.outputDir / (config.appName + ".app");
     bool cleaned = false;
-    if (fs::exists(appPath)) {
-        fs::remove_all(appPath);
-        LOG_INFO("Removed {}", appPath);
-        cleaned = true;
-    }
-    // 扫描输出目录中所有 .dmg 文件并删除
-    for (auto& entry : fs::directory_iterator(config.outputDir)) {
-        if (entry.path().extension() == ".dmg") {
-            fs::remove(entry.path());
-            LOG_INFO("Removed {}", entry.path());
+    try {
+        if (fs::exists(appPath)) {
+            fs::remove_all(appPath);
+            LOG_INFO("Removed {}", appPath);
             cleaned = true;
         }
+        // 先收集 .dmg 路径，再删除，避免遍历时删除当前条目的 UB
+        std::vector<fs::path> dmgFiles;
+        if (fs::exists(config.outputDir)) {
+            for (auto& entry : fs::directory_iterator(config.outputDir)) {
+                if (entry.path().extension() == ".dmg") {
+                    dmgFiles.push_back(entry.path());
+                }
+            }
+        }
+        for (const auto& dmgPath : dmgFiles) {
+            fs::remove(dmgPath);
+            LOG_INFO("Removed {}", dmgPath);
+            cleaned = true;
+        }
+    } catch (const fs::filesystem_error& e) {
+        LOG_WARNING("Clean failed for part of the output: {}", e.what());
     }
     if (!cleaned) {
         LOG_INFO("Nothing to clean in {}", config.outputDir);

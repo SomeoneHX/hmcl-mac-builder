@@ -47,12 +47,31 @@ bool GenerateLauncherScript(const fs::path& outputPath, const std::string& appNa
     script << "# Version: " << version << "\n";
     script << "# ==========================================\n";
 
-    // 获取脚本所在目录，定位 Resources 中的 JAR 文件
+    // 运行时检测系统语言：优先 $LANG，回退 macOS 系统偏好，最后 en
+    script << "if [ -z \"$LANG\" ]; then\n";
+    script << "    LANG=$(defaults read -g AppleLocale 2>/dev/null)\n";
+    script << "    [ -n \"$LANG\" ] && LANG=\"${LANG}.UTF-8\"\n";
+    script << "    LANG=\"${LANG:-en}\"\n";
+    script << "fi\n";
+    script << "case \"${LANG:-en}\" in\n";
+    script << "    zh*)\n";
+    script << "        MSG_JAR=\"找不到 " << appName << " 主程序，应用可能已损坏\"\n";
+    script << "        MSG_JAVA=\"Java 运行环境丢失，应用可能已损坏\"\n";
+    script << "        MSG_SYS_JAVA=\"无法找到 Java 运行环境，请确保 /usr/bin/java 能够正确运行\"\n";
+    script << "        BTN_OK=\"确定\"\n";
+    script << "        ;;\n";
+    script << "    *)\n";
+    script << "        MSG_JAR=\"Cannot find " << appName << " main program. The application may be corrupted.\"\n";
+    script << "        MSG_JAVA=\"Java runtime is missing. The application may be corrupted.\"\n";
+    script << "        MSG_SYS_JAVA=\"Cannot find Java runtime. Please make sure /usr/bin/java works correctly.\"\n";
+    script << "        BTN_OK=\"OK\"\n";
+    script << "        ;;\n";
+    script << "esac\n";
+
     script << "DIR=\"$(cd \"$(dirname \"$0\")\" && pwd)\"\n";
     script << "JAR=\"$DIR/../Resources/" << appName << ".jar\"\n";
-    // JAR 不存在时弹出 macOS 原生错误对话框
     script << "if [ ! -f \"$JAR\" ]; then\n";
-    script << "  osascript -e 'display dialog \"找不到 " << appName << " 主程序，应用可能已损坏\" buttons {\"确定\"} default button \"确定\" with title \"" << appName << "\" with icon stop'\n";
+    script << "  osascript -e \"display dialog \\\"$MSG_JAR\\\" buttons {\\\"$BTN_OK\\\"} default button \\\"$BTN_OK\\\" with title \\\"" << appName << "\\\" with icon stop\"\n";
     script << "  exit 1\n";
     script << "fi\n";
     script << "cd \"$HOME\"\n";
@@ -61,14 +80,14 @@ bool GenerateLauncherScript(const fs::path& outputPath, const std::string& appNa
         // 使用打包在 .app 内部的 Java 运行时
         script << "JAVA=\"$DIR/../Java/bin/java\"\n";
         script << "if [ ! -x \"$JAVA\" ]; then\n";
-        script << "  osascript -e 'display dialog \"Java 运行环境丢失，应用可能已损坏\" buttons {\"确定\"} default button \"确定\" with title \"" << appName << "\" with icon stop'\n";
+        script << "  osascript -e \"display dialog \\\"$MSG_JAVA\\\" buttons {\\\"$BTN_OK\\\"} default button \\\"$BTN_OK\\\" with title \\\"" << appName << "\\\" with icon stop\"\n";
         script << "  exit 1\n";
         script << "fi\n";
         script << "exec \"$JAVA\" -jar \"$JAR\"\n";
     } else {
         // 使用系统自带的 /usr/bin/java
         script << "if [ ! -x /usr/bin/java ]; then\n";
-        script << "  osascript -e 'display dialog \"无法找到 Java 运行环境，请确保 /usr/bin/java 能够正确运行\" buttons {\"确定\"} default button \"确定\" with title \"" << appName << "\" with icon stop'\n";
+        script << "  osascript -e \"display dialog \\\"$MSG_SYS_JAVA\\\" buttons {\\\"$BTN_OK\\\"} default button \\\"$BTN_OK\\\" with title \\\"" << appName << "\\\" with icon stop\"\n";
         script << "  exit 1\n";
         script << "fi\n";
         script << "exec /usr/bin/java -jar \"$JAR\"\n";

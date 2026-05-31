@@ -93,6 +93,18 @@ std::string ExtractVersionFromJarName(const std::string& jarPath) {
     return version;
 }
 
+// 转义 shell 命令参数中的特殊字符，防止命令注入
+std::string EscapeShellArg(const std::string& arg) {
+    std::string result;
+    for (char c : arg) {
+        if (c == '"' || c == '\\' || c == '`' || c == '$') {
+            result += '\\';
+        }
+        result += c;
+    }
+    return result;
+}
+
 // 使用 mkdtemp 创建唯一临时目录
 TempDir::TempDir() {
     std::string pattern = "/tmp/hmcl-build-XXXXXX";
@@ -109,7 +121,8 @@ TempDir::TempDir() {
 // 析构时自动删除临时目录（除非已调用 release()）
 TempDir::~TempDir() {
     if (!released_ && !path_.empty()) {
-        fs::remove_all(path_);
+        std::error_code ec;
+        fs::remove_all(path_, ec);
     }
 }
 

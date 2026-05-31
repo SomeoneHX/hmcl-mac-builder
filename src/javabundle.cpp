@@ -135,13 +135,34 @@ JavaInfo FindJava(const std::string& userPath) {
     // 4. 扫描系统级和用户级的 JavaVirtualMachines 目录
     std::vector<JavaInfo> candidates;
     ScanJavaVirtualMachines("/Library/Java", candidates);
-    ScanJavaVirtualMachines(std::string(getenv("HOME")) + "/Library/Java", candidates);
+    const char* home = getenv("HOME");
+    if (home) {
+        ScanJavaVirtualMachines(std::string(home) + "/Library/Java", candidates);
+    }
 
     // 选择版本最高的 JDK
     if (!candidates.empty()) {
         std::sort(candidates.begin(), candidates.end(),
             [](const JavaInfo& a, const JavaInfo& b) {
-                return ParseMajorVersion(a.version) > ParseMajorVersion(b.version);
+                auto parse = [](const std::string& v) -> std::vector<int> {
+                    std::vector<int> parts;
+                    std::string cur;
+                    for (char c : v) {
+                        if (c == '.') {
+                            parts.push_back(std::atoi(cur.c_str()));
+                            cur.clear();
+                        } else if (c >= '0' && c <= '9') {
+                            cur += c;
+                        } else { break; }
+                    }
+                    if (!cur.empty()) parts.push_back(std::atoi(cur.c_str()));
+                    return parts;
+                };
+                auto va = parse(a.version);
+                auto vb = parse(b.version);
+                for (size_t i = 0; i < va.size() && i < vb.size(); i++)
+                    if (va[i] != vb[i]) return va[i] > vb[i];
+                return va.size() > vb.size();
             });
         return candidates[0];
     }
@@ -178,6 +199,9 @@ static bool CopyDir(const fs::path& src, const fs::path& dst, bool verbose) {
             }
             if (entry.is_symlink()) {
                 fs::path target = fs::read_symlink(entry.path());
+                if (target.is_relative()) {
+                    target = fs::absolute(entry.path().parent_path() / target);
+                }
                 fs::create_symlink(target, destPath);
                 LOG_VERBOSE("Symlink " << fs::relative(destPath, dst), verbose);
             } else if (entry.is_regular_file() || entry.is_socket() || entry.is_fifo()) {

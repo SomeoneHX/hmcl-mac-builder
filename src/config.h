@@ -10,6 +10,7 @@ struct BuildInfo {
     std::string builderVersion;   // 本工具自身版本号
     std::string builderName;      // 本工具名称
     std::string builderRepo;      // 本工具仓库地址
+    std::string builderLang;      // 构建使用的语言 (en/zh)
     std::string buildDate;        // 构建日期 (YYYY-MM-DD)
     std::string buildTime;        // 构建时间 (HH:MM:SS)
     std::string buildArgs;        // 构建时使用的命令参数

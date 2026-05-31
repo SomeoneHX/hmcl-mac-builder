@@ -23,6 +23,8 @@ std::string Trim(const std::string& s);
 std::string CaptureOutput(const std::string& cmd);
 // 从 JAR 文件名中提取 HMCL 版本号（如 "HMCL-3.5.7.jar" → "3.5.7"）
 std::string ExtractVersionFromJarName(const std::string& jarPath);
+// 转义 shell 命令参数中的特殊字符（双引号、反斜杠、反引号、$）
+std::string EscapeShellArg(const std::string& arg);
 
 // TempDir: RAII 临时目录管理类，析构时自动清理
 class TempDir {

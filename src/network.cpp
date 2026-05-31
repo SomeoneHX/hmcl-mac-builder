@@ -147,7 +147,11 @@ ReleaseInfo GetLatestRelease(const std::string& tag) {
         if (data.contains("assets") && data["assets"].is_array()) {
             for (auto& asset : data["assets"]) {
                 std::string name = asset.value("name", "");
-                if (name.find(".jar") != std::string::npos) {
+                if (name.size() > 4 &&
+                    name.substr(name.size() - 4) == ".jar" &&
+                    name.find("-sources") == std::string::npos &&
+                    name.find("-javadoc") == std::string::npos &&
+                    name.find("-doc") == std::string::npos) {
                     info.jarUrl = asset.value("browser_download_url", "");
                     break;
                 }
