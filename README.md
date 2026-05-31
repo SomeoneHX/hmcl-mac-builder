@@ -65,6 +65,9 @@ cmake --build build
 # 跳过图标处理
 ./build/hmcl-mac-builder --skip-icon
 
+# 使用 GitHub 下载代理（仅对文件下载生效，API 请求不使用）
+./build/hmcl-mac-builder --proxy https://v4.gh-proxy.org/
+
 # 清理之前构建的文件
 ./build/hmcl-mac-builder --clean
 ```
@@ -82,6 +85,7 @@ cmake --build build
 | `--no-dmg` | 仅生成 `.app`，跳过 `.dmg` 创建 | 生成 `.dmg` |
 | `--skip-icon` | 跳过图标处理 | 处理图标 |
 | `--clean` | 清理之前的构建文件 | 不清除 |
+| `--proxy URL` | GitHub 下载代理前缀（仅对文件下载生效，API 请求不使用） | 不使用 |
 | `--keep-temp` | 构建完成后保留临时文件 | 自动删除 |
 | `--verbose` | 启用详细日志输出 | 仅显示概要 |
 
