@@ -43,10 +43,9 @@ bool GenerateLauncherScript(const fs::path& outputPath, const std::string& appNa
     if (!buildInfo.createDmgVersion.empty()) {
         script << "# create-dmg: " << buildInfo.createDmgVersion << "\n";
     }
-    script << "# ==========================================\n";
     script << "# " << appName << " Launcher\n";
     script << "# Version: " << version << "\n";
-    script << "# Build: " << buildInfo.buildDate << "\n";
+    script << "# ==========================================\n";
 
     // 获取脚本所在目录，定位 Resources 中的 JAR 文件
     script << "DIR=\"$(cd \"$(dirname \"$0\")\" && pwd)\"\n";
