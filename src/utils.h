@@ -8,7 +8,7 @@
 namespace fs = std::filesystem;
 
 // 使用 system() 运行命令，返回退出码
-int RunCommand(const std::string& cmd);
+int RunCommand(const std::string& cmd, bool verbose = false);
 // 运行命令并捕获 stdout 输出（通过 popen），返回是否成功
 bool RunCommandCapture(const std::string& cmd, std::string& output);
 // 检查系统是否存在指定命令（通过 which）

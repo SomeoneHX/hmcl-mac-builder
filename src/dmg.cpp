@@ -37,11 +37,10 @@ bool CreateDMG(const Config& config, const std::string& version, bool verbose, c
     cmd << " --app-drop-link 500 185";
     cmd << " \"" << EscapeShellArg(dmgPath.string()) << "\"";
     cmd << " \"" << EscapeShellArg(appPath.string()) << "\"";
-    cmd << " >/dev/null";
 
     LOG_VERBOSE("Running: create-dmg for " << dmgPath, verbose);
 
-    int rc = RunCommand(cmd.str());
+    int rc = RunCommand(cmd.str(), verbose);
     if (rc != 0) {
         LOG_ERROR("create-dmg failed with exit code {}", rc);
         return false;

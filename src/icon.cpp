@@ -19,20 +19,20 @@ static bool ConvertIcoToPng(const fs::path& icoPath, const fs::path& pngPath, bo
     if (Which("magick")) {
         std::string cmd = "magick convert \"" + icoPath.string() + "\" \"" + pngPath.string() + "\"";
         LOG_VERBOSE("Running: " << cmd, verbose);
-        if (RunCommand(cmd) == 0) return true;
+        if (RunCommand(cmd, verbose) == 0) return true;
     }
 
     // ImageMagick 6 使用 "convert" 命令
     if (Which("convert")) {
         std::string cmd = "convert \"" + icoPath.string() + "\" \"" + pngPath.string() + "\"";
         LOG_VERBOSE("Running: " << cmd, verbose);
-        if (RunCommand(cmd) == 0) return true;
+        if (RunCommand(cmd, verbose) == 0) return true;
     }
 
     // 最后回退到 macOS 自带的 sips 命令
-    std::string sipsCmd = "sips -s format png \"" + icoPath.string() + "\" --out \"" + pngPath.string() + "\" >/dev/null 2>&1";
+    std::string sipsCmd = "sips -s format png \"" + icoPath.string() + "\" --out \"" + pngPath.string() + "\"";
     LOG_VERBOSE("Running: " << sipsCmd, verbose);
-    if (RunCommand(sipsCmd) == 0) return true;
+    if (RunCommand(sipsCmd, verbose) == 0) return true;
 
     return false;
 }
@@ -75,9 +75,9 @@ bool ProcessIcon(const fs::path& outputPath, bool verbose, const std::string& pr
         fs::path outPng = iconsetDir / filename;
         std::string cmd = "sips -z " + std::to_string(scaleSize) + " " +
                           std::to_string(scaleSize) + " \"" + pngBase.string() +
-                          "\" --out \"" + outPng.string() + "\" >/dev/null 2>&1";
+                          "\" --out \"" + outPng.string() + "\"";
         LOG_VERBOSE("Running: " << cmd, verbose);
-        if (RunCommand(cmd) != 0) {
+        if (RunCommand(cmd, verbose) != 0) {
             LOG_ERROR("Failed to resize icon to {}x{}", scaleSize, scaleSize);
             return false;
         }
@@ -86,8 +86,8 @@ bool ProcessIcon(const fs::path& outputPath, bool verbose, const std::string& pr
     // 使用 macOS iconutil 将 iconset 编译为 .icns 文件
     LOG_VERBOSE("Generating ICNS with iconutil...", verbose);
     std::string iconutilCmd = "iconutil -c icns \"" + iconsetDir.string() +
-                              "\" -o \"" + outputPath.string() + "\" 2>/dev/null";
-    if (RunCommand(iconutilCmd) != 0) {
+                              "\" -o \"" + outputPath.string() + "\"";
+    if (RunCommand(iconutilCmd, verbose) != 0) {
         LOG_ERROR("Failed to generate ICNS file");
         return false;
     }

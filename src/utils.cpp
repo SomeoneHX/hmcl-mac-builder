@@ -9,8 +9,12 @@
 #include <unistd.h>
 
 // 使用 system() 执行命令并返回退出码
-int RunCommand(const std::string& cmd) {
-    return std::system(cmd.c_str());
+int RunCommand(const std::string& cmd, bool verbose) {
+    std::string fullCmd = cmd;
+    if (!verbose) {
+        fullCmd += " >/dev/null 2>&1";
+    }
+    return std::system(fullCmd.c_str());
 }
 
 // 使用 popen 执行命令，将 stdout 捕获到 output 字符串，返回命令是否成功退出
