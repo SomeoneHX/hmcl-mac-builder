@@ -135,7 +135,17 @@ int main(int argc, char* argv[]) {
     if (!config.jarPath.empty()) {
         // 使用用户提供的本地 JAR
         jarPath = config.jarPath;
-        version = config.tag.empty() ? "local" : config.tag;
+        if (!config.tag.empty()) {
+            version = config.tag;
+        } else {
+            std::string extracted = ExtractVersionFromJarName(config.jarPath);
+            if (!extracted.empty()) {
+                version = extracted;
+                LOG_INFO("Auto-detected HMCL version {} from filename", version);
+            } else {
+                version = "local";
+            }
+        }
         LOG_VERBOSE("Using local JAR: " << jarPath, config.verbose);
         LOG_VERBOSE("Version set to: " << version, config.verbose);
     } else {

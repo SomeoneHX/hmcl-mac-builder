@@ -67,6 +67,32 @@ std::string CaptureOutput(const std::string& cmd) {
     return Trim(out);
 }
 
+// 从 JAR 文件路径中提取 HMCL 版本号
+// 支持文件名格式如 HMCL-3.5.7.jar、HMCL-3.5.227.jar 等
+std::string ExtractVersionFromJarName(const std::string& jarPath) {
+    fs::path p(jarPath);
+    std::string filename = p.filename().string();
+
+    const std::string prefix = "HMCL-";
+    const std::string suffix = ".jar";
+
+    if (filename.size() <= prefix.size() + suffix.size()) return "";
+    if (filename.substr(0, prefix.size()) != prefix) return "";
+    if (filename.substr(filename.size() - suffix.size()) != suffix) return "";
+
+    std::string version = filename.substr(
+        prefix.size(),
+        filename.size() - prefix.size() - suffix.size()
+    );
+
+    if (version.empty() || !std::isdigit(static_cast<unsigned char>(version[0]))) return "";
+    for (char c : version) {
+        if (!std::isdigit(static_cast<unsigned char>(c)) && c != '.') return "";
+    }
+
+    return version;
+}
+
 // 使用 mkdtemp 创建唯一临时目录
 TempDir::TempDir() {
     std::string pattern = "/tmp/hmcl-build-XXXXXX";

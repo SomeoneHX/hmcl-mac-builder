@@ -50,6 +50,7 @@ static const std::map<std::string, std::string> zh_strings = {
     {"Using temporary directory: {}", "正在使用临时目录: {}"},
     {"Using local JAR: {}", "正在使用本地 JAR: {}"},
     {"Version set to: {}", "版本设置为: {}"},
+    {"Auto-detected HMCL version {} from filename", "从文件名自动识别 HMCL 版本 {}"},
     {"Fetching latest release info from GitHub...", "正在从 GitHub 获取最新发布信息..."},
     {"Failed to get release info. Use --jar to specify a local file.",
      "获取发布信息失败。使用 --jar 指定本地文件。"},

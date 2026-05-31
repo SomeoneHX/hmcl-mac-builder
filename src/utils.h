@@ -21,6 +21,8 @@ bool ReadFile(const fs::path& path, std::string& content);
 std::string Trim(const std::string& s);
 // 执行命令并返回去除首尾空白的输出结果
 std::string CaptureOutput(const std::string& cmd);
+// 从 JAR 文件名中提取 HMCL 版本号（如 "HMCL-3.5.7.jar" → "3.5.7"）
+std::string ExtractVersionFromJarName(const std::string& jarPath);
 
 // TempDir: RAII 临时目录管理类，析构时自动清理
 class TempDir {
