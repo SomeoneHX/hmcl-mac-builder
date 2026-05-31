@@ -58,15 +58,19 @@ bool GenerateLauncherScript(const fs::path& outputPath, const std::string& appNa
     script << "        MSG_JAR=\"找不到 " << appName << " 主程序，应用可能已损坏\"\n";
     script << "        MSG_JAVA=\"Java 运行环境丢失，应用可能已损坏\"\n";
     script << "        MSG_SYS_JAVA=\"无法找到 Java 运行环境，请确保 /usr/bin/java 能够正确运行\"\n";
+    script << "        MSG_CRASH=\"" << appName << " 启动后异常退出，应用可能已损坏\"\n";
     script << "        BTN_OK=\"确定\"\n";
     script << "        ;;\n";
     script << "    *)\n";
     script << "        MSG_JAR=\"Cannot find " << appName << " main program. The application may be corrupted.\"\n";
     script << "        MSG_JAVA=\"Java runtime is missing. The application may be corrupted.\"\n";
     script << "        MSG_SYS_JAVA=\"Cannot find Java runtime. Please make sure /usr/bin/java works correctly.\"\n";
+    script << "        MSG_CRASH=\"" << appName << " exited unexpectedly after startup. The application may be corrupted.\"\n";
     script << "        BTN_OK=\"OK\"\n";
     script << "        ;;\n";
     script << "esac\n";
+    script << "\n";
+    script << "APP_NAME=\"" << appName << "\"\n";
 
     script << "DIR=\"$(cd \"$(dirname \"$0\")\" && pwd)\"\n";
     script << "JAR=\"$DIR/../Resources/" << appName << ".jar\"\n";
@@ -80,18 +84,32 @@ bool GenerateLauncherScript(const fs::path& outputPath, const std::string& appNa
         // 使用打包在 .app 内部的 Java 运行时
         script << "JAVA=\"$DIR/../Java/bin/java\"\n";
         script << "if [ ! -x \"$JAVA\" ]; then\n";
-        script << "  osascript -e \"display dialog \\\"$MSG_JAVA\\\" buttons {\\\"$BTN_OK\\\"} default button \\\"$BTN_OK\\\" with title \\\"" << appName << "\\\" with icon stop\"\n";
+        script << "  osascript -e \"display dialog \\\"$MSG_JAVA\\\" buttons {\\\"$BTN_OK\\\"} default button \\\"$BTN_OK\\\" with title \\\"$APP_NAME\\\" with icon stop\"\n";
         script << "  exit 1\n";
         script << "fi\n";
-        script << "exec \"$JAVA\" -jar \"$JAR\"\n";
     } else {
         // 使用系统自带的 /usr/bin/java
         script << "if [ ! -x /usr/bin/java ]; then\n";
-        script << "  osascript -e \"display dialog \\\"$MSG_SYS_JAVA\\\" buttons {\\\"$BTN_OK\\\"} default button \\\"$BTN_OK\\\" with title \\\"" << appName << "\\\" with icon stop\"\n";
+        script << "  osascript -e \"display dialog \\\"$MSG_SYS_JAVA\\\" buttons {\\\"$BTN_OK\\\"} default button \\\"$BTN_OK\\\" with title \\\"$APP_NAME\\\" with icon stop\"\n";
         script << "  exit 1\n";
         script << "fi\n";
-        script << "exec /usr/bin/java -jar \"$JAR\"\n";
+        script << "JAVA=/usr/bin/java\n";
     }
+    // 后台启动 Java 并检测启动失败（5秒内非零退出则弹窗显示日志）
+    script << "LOG_DIR=\"$HOME/Library/Logs/$APP_NAME\"\n";
+    script << "LOG_FILE=\"$LOG_DIR/launcher.log\"\n";
+    script << "mkdir -p \"$LOG_DIR\"\n";
+    script << "\"$JAVA\" -jar \"$JAR\" > \"$LOG_FILE\" 2>&1 &\n";
+    script << "JAVA_PID=$!\n";
+    script << "sleep 5\n";
+    script << "if ! kill -0 \"$JAVA_PID\" 2>/dev/null; then\n";
+    script << "  wait \"$JAVA_PID\" 2>/dev/null\n";
+    script << "  EXIT_CODE=$?\n";
+    script << "  if [ $EXIT_CODE -ne 0 ]; then\n";
+    script << "    osascript -e \"display dialog \\\"$MSG_CRASH\\\" & return & return & \\\"Exit code: $EXIT_CODE\\\" & return & \\\"Log file: $LOG_FILE\\\" buttons {\\\"$BTN_OK\\\"} default button \\\"$BTN_OK\\\" with title \\\"$APP_NAME\\\" with icon stop\" 2>/dev/null\n";
+    script << "    exit 1\n";
+    script << "  fi\n";
+    script << "fi\n";
 
     // 写脚本文件
     if (!WriteFile(outputPath, script.str())) {
