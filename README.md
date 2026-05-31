@@ -6,7 +6,7 @@
 
 - 自动从 GitHub Releases 获取最新 HMCL JAR 包
 - 支持指定本地 JAR 文件（跳过下载）
-- 自动下载并转换 HMCL 图标为 macOS `.icns` 格式
+- 从 HMCL 仓库下载 PNG 图标并转换为 macOS `.icns` 格式
 - 生成启动脚本（`launch.sh`），自动定位当前目录的 JAR 并调用 Java 运行
 - 组装完整的 `.app` 目录结构（`Info.plist`、`Resources`、`MacOS`）
 - 可选调用 `create-dmg` 生成 `.dmg` 磁盘映像
@@ -69,6 +69,9 @@ cmake --build build
 # 使用 GitHub 下载代理（仅对文件下载生效，API 请求不使用）
 ./build/hmcl-mac-builder --proxy https://v4.gh-proxy.org/
 
+# 启用详细日志输出
+./build/hmcl-mac-builder --verbose
+
 # 清理之前构建的文件
 ./build/hmcl-mac-builder --clean
 
@@ -89,7 +92,7 @@ cmake --build build
 | `--tag VERSION` | GitHub Release 标签 | 最新稳定版 |
 | `--no-dmg` | 仅生成 `.app`，跳过 `.dmg` 创建 | 生成 `.dmg` |
 | `--skip-icon` | 跳过图标处理 | 处理图标 |
-| `--clean` | 清理之前的构建文件 | 不清除 |
+| `--clean` | 清理之前的构建产物（`.app` / `.dmg`） | 不清除 |
 | `--proxy URL` | GitHub 下载代理前缀（仅对文件下载生效，API 请求不使用） | 不使用 |
 | `--keep-temp` | 构建完成后保留临时文件 | 自动删除 |
 | `--lang zh\|en` | 输出语言（zh = 中文，en = 英文） | 自动检测 `LANG` 环境变量 |
@@ -97,10 +100,20 @@ cmake --build build
 
 ## 工作原理
 
+```mermaid
+flowchart LR
+    A[解析参数] --> B[获取 Release 信息]
+    B --> C[下载 JAR]
+    B --> D[处理图标]
+    C & D --> E[生成启动脚本]
+    E --> F[组装 .app<br>Info.plist + JAR + ICNS + launch.sh]
+    F --> G{--no-dmg?}
+    G -- 否 --> H[创建 .dmg]
+    G -- 是 --> I[清理临时文件]
+    H --> I
 ```
-解析参数 → 获取 Release 信息 → 下载 JAR → 处理图标 → 生成启动脚本 →
-组装 .app（Info.plist + JAR + ICNS + launch.sh）→ 创建 .dmg → 清理临时文件
-```
+
+> 注意：下载 JAR 与处理图标**并行**执行，由 `std::async` 完成。
 
 每一步均可独立观察：启用 `--verbose` 和 `--keep-temp` 可查看完整过程。
 
@@ -115,6 +128,7 @@ hmcl-mac-builder/
     ├── config.h / .cpp     # Config 结构体、CLI 参数解析
     ├── i18n.h / .cpp       # 国际化支持（中英双语，--lang 参数）
     ├── utils.h / .cpp      # 工具函数：日志、文件操作、临时目录
+    ├── version.h.in         # CMake configure_file 模板，生成版本宏
     ├── network.h / .cpp    # HTTP 下载 + GitHub API Release 查询
     ├── icon.h / .cpp       # 图标下载与 ICNS 格式转换
     ├── launcher.h / .cpp   # launch.sh 启动脚本生成
