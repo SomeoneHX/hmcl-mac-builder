@@ -4,4 +4,4 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-bool GenerateLauncherScript(const fs::path& outputPath, const std::string& appName, const std::string& version);
+bool GenerateLauncherScript(const fs::path& outputPath, const std::string& appName, const std::string& version, const std::string& buildDate);

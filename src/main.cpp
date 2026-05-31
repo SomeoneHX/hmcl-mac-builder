@@ -8,6 +8,7 @@
 #include <iostream>
 #include <future>
 #include <cstdlib>
+#include <ctime>
 
 static bool CleanOutput(const Config& config) {
     fs::path appPath = config.outputDir / (config.appName + ".app");
@@ -111,8 +112,13 @@ int main(int argc, char* argv[]) {
         LOG_INFO("JAR downloaded successfully");
     }
 
+    std::time_t now = std::time(nullptr);
+    char dateBuf[16];
+    std::strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", std::localtime(&now));
+    std::string buildDate(dateBuf);
+
     LOG_INFO("Generating launcher script...");
-    if (!GenerateLauncherScript(launcherPath, config.appName, version)) {
+    if (!GenerateLauncherScript(launcherPath, config.appName, version, buildDate)) {
         LOG_ERROR("Failed to generate launcher script");
         return EXIT_FAILURE;
     }

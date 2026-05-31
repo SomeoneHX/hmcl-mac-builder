@@ -57,7 +57,7 @@ bool CreateAppBundle(const Config& config, const fs::path& jarPath,
         return false;
     }
 
-    fs::path jarDest = resourcesDir / (config.appName + "-" + version + ".jar");
+    fs::path jarDest = resourcesDir / (config.appName + ".jar");
     try {
         fs::copy_file(jarPath, jarDest, fs::copy_options::overwrite_existing);
         LOG_VERBOSE("Copied JAR to " << jarDest, verbose);

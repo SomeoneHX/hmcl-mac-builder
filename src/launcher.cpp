@@ -3,11 +3,14 @@
 #include <sstream>
 #include <iostream>
 
-bool GenerateLauncherScript(const fs::path& outputPath, const std::string& appName, const std::string& version) {
+bool GenerateLauncherScript(const fs::path& outputPath, const std::string& appName, const std::string& version, const std::string& buildDate) {
     std::ostringstream script;
     script << "#!/bin/bash\n";
+    script << "# " << appName << " Launcher\n";
+    script << "# Version: " << version << "\n";
+    script << "# Build: " << buildDate << "\n";
     script << "DIR=\"$(cd \"$(dirname \"$0\")\" && pwd)\"\n";
-    script << "JAR=\"$DIR/../Resources/" << appName << "-" << version << ".jar\"\n";
+    script << "JAR=\"$DIR/../Resources/" << appName << ".jar\"\n";
     script << "if [ ! -f \"$JAR\" ]; then\n";
     script << "  echo \"Error: HMCL JAR not found at $JAR\" >&2\n";
     script << "  exit 1\n";
