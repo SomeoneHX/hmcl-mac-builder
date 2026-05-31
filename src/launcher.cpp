@@ -12,7 +12,7 @@ bool GenerateLauncherScript(const fs::path& outputPath, const std::string& appNa
     script << "DIR=\"$(cd \"$(dirname \"$0\")\" && pwd)\"\n";
     script << "JAR=\"$DIR/../Resources/" << appName << ".jar\"\n";
     script << "if [ ! -f \"$JAR\" ]; then\n";
-    script << "  echo \"Error: HMCL JAR not found at $JAR\" >&2\n";
+    script << "  osascript -e 'display dialog \"找不到 HMCL 主程序，应用可能已损坏\" buttons {\"确定\"} default button \"确定\" with title \"" << appName << "\" with icon stop'\n";
     script << "  exit 1\n";
     script << "fi\n";
     script << "cd \"$HOME\"\n";
