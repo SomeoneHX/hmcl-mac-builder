@@ -157,6 +157,16 @@ cmake --build build
 ./build/hmcl-mac-builder --proxy https://gh-proxy.org/ --tag v3.5.7 --output ~/Desktop
 ```
 
+## macOS 提示"已损坏 / 不安全"
+
+打开生成的 `.app` 时，macOS 可能提示"已损坏，无法打开"或"来自身份不明的开发者"。这是因为 macOS 给从网络下载的应用添加了隔离属性（`com.apple.quarantine`）。移除隔离属性即可正常打开：
+
+```bash
+xattr -rd com.apple.quarantine /Applications/HMCL.app
+```
+
+如果仍需以 Gatekeeper 豁免，也可在"系统设置 → 隐私与安全性"中点击"仍要打开"。
+
 ## 命令行选项
 
 | 选项 | 说明 | 默认值 |
