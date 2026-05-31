@@ -167,6 +167,19 @@ xattr -rd com.apple.quarantine /Applications/HMCL.app
 
 如果仍需以 Gatekeeper 豁免，也可在"系统设置 → 隐私与安全性"中点击"仍要打开"。
 
+## 更新 HMCL
+
+HMCL 支持应用内自动更新。打开应用后，HMCL 会自动检查更新并下载新版 JAR 到
+`~/Library/Application Support/hmcl/`，无需重新执行本工具或重装整个 `.app`。
+
+如需手动替换，也可将新版 `HMCL-x.y.z.jar` 直接覆盖到 `.app` 内：
+
+```bash
+cp HMCL-x.y.z.jar /Applications/HMCL.app/Contents/Resources/HMCL.jar
+```
+
+启动脚本会自动使用最新的 JAR 文件。
+
 ## 命令行选项
 
 | 选项 | 说明 | 默认值 |
