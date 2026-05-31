@@ -8,7 +8,9 @@
 - 支持指定本地 JAR 文件（跳过下载）
 - 从 HMCL 仓库下载 PNG 图标并转换为 macOS `.icns` 格式
 - 生成启动脚本（`launch.sh`），自动定位当前目录的 JAR 并调用 Java 运行
-- 组装完整的 `.app` 目录结构（`Info.plist`、`Resources`、`MacOS`）
+- 自动检测本机 Java 并打包进 `.app`（`--bundle-java`），生成的程序可独立运行，无需用户额外安装 Java
+- 支持通过 `--java-path` 指定要打包的 Java 安装路径
+- 组装完整的 `.app` 目录结构（`Info.plist`、`Resources`、`MacOS`、`Java`）
 - 可选调用 `create-dmg` 生成 `.dmg` 磁盘映像
 - 支持自定义应用名称、输出目录、版本标签
 - 中英双语命令行输出，支持自动检测与手动切换语言
@@ -31,7 +33,8 @@
 | `sips` + `iconutil` | macOS 内置，用于图标转换 | 无需安装 |
 | `create-dmg` | 可选，创建 `.dmg` 映像 | `brew install create-dmg` |
 | ImageMagick | 可选，图标转换的备用方案 | `brew install imagemagick` |
-| Java Runtime | 运行 HMCL 所必需 | 从 [Adoptium](https://adoptium.net) 或 [Oracle](https://java.com) 安装 |
+| Java Runtime | 未使用 `--bundle-java` 时运行 HMCL 所必需 | 从 [Adoptium](https://adoptium.net) 或 [Oracle](https://java.com) 安装 |
+| Java 17+ | 使用 `--bundle-java` 时，构建工具自动检测并打包本机 Java | 无需安装 |
 
 ## 构建
 
@@ -78,6 +81,12 @@ cmake --build build
 # 指定输出语言（默认自动检测 LANG 环境变量）
 ./build/hmcl-mac-builder --lang zh
 ./build/hmcl-mac-builder --lang en
+
+# 自动检测本机 Java 并打包进 .app（生成的应用自带 Java 运行环境）
+./build/hmcl-mac-builder --bundle-java
+
+# 指定要打包的 Java 安装路径（隐含 --bundle-java）
+./build/hmcl-mac-builder --bundle-java --java-path /Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home
 ```
 
 ## 命令行选项
@@ -91,6 +100,8 @@ cmake --build build
 | `--jar PATH` | 指定本地 JAR 文件（跳过 GitHub 下载） | 从 GitHub 下载 |
 | `--tag VERSION` | GitHub Release 标签 | 最新稳定版 |
 | `--no-dmg` | 仅生成 `.app`，跳过 `.dmg` 创建 | 生成 `.dmg` |
+| `--bundle-java` | 自动检测本机 Java 17+ 并打包进 `.app`（`.app/Contents/Java/`） | 不打包 |
+| `--java-path PATH` | 指定要打包的 Java 路径（隐含 `--bundle-java`） | 自动检测 |
 | `--skip-icon` | 跳过图标处理 | 处理图标 |
 | `--clean` | 清理之前的构建产物（`.app` / `.dmg`） | 不清除 |
 | `--proxy URL` | GitHub 下载代理前缀（仅对文件下载生效，API 请求不使用） | 不使用 |
@@ -105,12 +116,18 @@ flowchart LR
     A[解析参数] --> B[获取 Release 信息]
     B --> C[下载 JAR]
     B --> D[处理图标]
-    C & D --> E[生成启动脚本]
-    E --> F[组装 .app<br>Info.plist + JAR + ICNS + launch.sh]
-    F --> G{--no-dmg?}
-    G -- 否 --> H[创建 .dmg]
-    G -- 是 --> I[清理临时文件]
-    H --> I
+    C & D --> E{--bundle-java?}
+    E -- 是 --> F[检测本机 Java]
+    F --> G[生成启动脚本<br>使用捆绑 Java]
+    E -- 否 --> H[生成启动脚本<br>使用系统 Java]
+    G & H --> I[组装 .app<br>Info.plist + JAR + ICNS + launch.sh]
+    I --> J{--bundle-java?}
+    J -- 是 --> K[打包 JDK 到 Contents/Java]
+    K --> L{--no-dmg?}
+    J -- 否 --> L
+    L -- 否 --> M[创建 .dmg]
+    L -- 是 --> N[清理临时文件]
+    M --> N
 ```
 
 > 注意：下载 JAR 与处理图标**并行**执行，由 `std::async` 完成。
@@ -132,6 +149,7 @@ hmcl-mac-builder/
     ├── network.h / .cpp    # HTTP 下载 + GitHub API Release 查询
     ├── icon.h / .cpp       # 图标下载与 ICNS 格式转换
     ├── launcher.h / .cpp   # launch.sh 启动脚本生成
+    ├── javabundle.h / .cpp # Java 本地检测与打包
     ├── appbundle.h / .cpp  # .app 捆绑包组装（Info.plist 等）
     └── dmg.h / .cpp        # 调用 create-dmg 生成磁盘映像
 ```

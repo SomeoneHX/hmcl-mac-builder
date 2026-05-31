@@ -4,4 +4,6 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-bool GenerateLauncherScript(const fs::path& outputPath, const std::string& appName, const std::string& version, const std::string& buildDate);
+bool GenerateLauncherScript(const fs::path& outputPath, const std::string& appName,
+                            const std::string& version, const std::string& buildDate,
+                            bool bundleJava = false);

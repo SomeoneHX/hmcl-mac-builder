@@ -1,4 +1,5 @@
 #include "appbundle.h"
+#include "javabundle.h"
 #include "utils.h"
 #include <fstream>
 #include <sstream>
@@ -41,7 +42,8 @@ static bool WriteInfoPlist(const fs::path& plistPath, const std::string& appName
 
 bool CreateAppBundle(const Config& config, const fs::path& jarPath,
                      const fs::path& icnsPath, const fs::path& launcherPath,
-                     const std::string& version, bool verbose) {
+                     const std::string& version, bool verbose,
+                     const fs::path& javaHome) {
     fs::path appDir = config.outputDir / (config.appName + ".app");
     fs::path contentsDir = appDir / "Contents";
     fs::path macosDir = contentsDir / "MacOS";
@@ -89,6 +91,16 @@ bool CreateAppBundle(const Config& config, const fs::path& jarPath,
     } catch (const fs::filesystem_error& e) {
         LOG_ERROR("Failed to copy launcher: {}", e.what());
         return false;
+    }
+
+    if (!javaHome.empty()) {
+        fs::path javaDir = contentsDir / "Java";
+        LOG_INFO("Bundling Java runtime into .app...");
+        if (!BundleJava(javaHome, javaDir, verbose)) {
+            LOG_ERROR("Failed to bundle Java runtime");
+            return false;
+        }
+        LOG_INFO("Java runtime bundled successfully");
     }
 
     LOG_INFO("App bundle created at {}", appDir);

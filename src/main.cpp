@@ -5,6 +5,7 @@
 #include "icon.h"
 #include "launcher.h"
 #include "appbundle.h"
+#include "javabundle.h"
 #include "dmg.h"
 #include <iostream>
 #include <future>
@@ -118,19 +119,31 @@ int main(int argc, char* argv[]) {
         LOG_INFO("JAR downloaded successfully");
     }
 
+    std::string javaHome;
+    if (config.bundleJava) {
+        LOG_INFO("Detecting local Java...");
+        JavaInfo javaInfo = FindJava(config.javaPath);
+        if (!javaInfo.valid) {
+            LOG_ERROR("Failed to find Java 17+. Please install JDK 17 or later, or use --java-path to specify a path.");
+            return EXIT_FAILURE;
+        }
+        LOG_INFO("Found Java {} at {}", javaInfo.version, javaInfo.javaHome);
+        javaHome = javaInfo.javaHome.string();
+    }
+
     std::time_t now = std::time(nullptr);
     char dateBuf[16];
     std::strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", std::localtime(&now));
     std::string buildDate(dateBuf);
 
     LOG_INFO("Generating launcher script...");
-    if (!GenerateLauncherScript(launcherPath, config.appName, version, buildDate)) {
+    if (!GenerateLauncherScript(launcherPath, config.appName, version, buildDate, config.bundleJava)) {
         LOG_ERROR("Failed to generate launcher script");
         return EXIT_FAILURE;
     }
 
     LOG_INFO("Creating app bundle...");
-    if (!CreateAppBundle(config, jarPath, icnsPath, launcherPath, HMCL_MAC_BUILDER_VERSION, config.verbose)) {
+    if (!CreateAppBundle(config, jarPath, icnsPath, launcherPath, HMCL_MAC_BUILDER_VERSION, config.verbose, javaHome)) {
         LOG_ERROR("Failed to create app bundle");
         return EXIT_FAILURE;
     }

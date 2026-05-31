@@ -15,6 +15,8 @@ static const std::string en_usage =
     "  --clean               Clean previous build files\n"
     "  --proxy URL           Use proxy for GitHub requests (e.g. https://v4.gh-proxy.org/)\n"
     "  --keep-temp           Keep temporary files\n"
+    "  --bundle-java         Auto-detect and bundle Java runtime into .app\n"
+    "  --java-path PATH      Specify Java path to bundle (implies --bundle-java)\n"
     "  --lang zh|en          Output language (default: auto-detect)\n"
     "  --verbose             Verbose output\n";
 
@@ -32,6 +34,8 @@ static const std::string zh_usage =
     "  --clean               清理之前的构建文件\n"
     "  --proxy URL           GitHub 下载代理（如 https://v4.gh-proxy.org/）\n"
     "  --keep-temp           保留临时文件\n"
+    "  --bundle-java         自动检测并打包 Java 运行时到 .app\n"
+    "  --java-path PATH      指定要打包的 Java 路径（隐含 --bundle-java）\n"
     "  --lang zh|en          输出语言（默认: 自动检测）\n"
     "  --verbose             启用详细日志\n";
 
@@ -108,6 +112,15 @@ static const std::map<std::string, std::string> zh_strings = {
     {"Running: create-dmg for {}", "正在运行: 为 {} 创建 DMG"},
     {"create-dmg failed with exit code {}", "create-dmg 失败，退出码 {}"},
     {"DMG created at {}", "DMG 已创建于 {}"},
+
+    {"Detecting local Java...", "正在检测本机 Java..."},
+    {"Found Java {} at {}", "找到 Java {} 于 {}"},
+    {"Failed to find Java 17+. Please install JDK 17 or later, or use --java-path to specify a path.",
+     "未找到 Java 17+，请安装 JDK 17 或以上版本，或使用 --java-path 指定路径。"},
+    {"Bundling Java runtime into .app...", "正在打包 Java 运行时到 .app..."},
+    {"Java runtime bundled successfully", "Java 运行时打包成功"},
+    {"Failed to bundle Java runtime", "Java 运行时打包失败"},
+    {"--java-path requires a path argument", "--java-path 需要路径参数"},
 };
 
 std::string I18n::detectLang() {

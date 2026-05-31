@@ -58,6 +58,15 @@ bool ParseArgs(int argc, char* argv[], Config& config) {
             config.tag = argv[++i];
         } else if (IsFlag(argc, argv, i, "", "--no-dmg")) {
             config.noDmg = true;
+        } else if (IsFlag(argc, argv, i, "", "--bundle-java")) {
+            config.bundleJava = true;
+        } else if (IsFlag(argc, argv, i, "", "--java-path")) {
+            if (!HasArg(argc, argv, i)) {
+                LOG_ERROR("--java-path requires a path argument");
+                return false;
+            }
+            config.javaPath = argv[++i];
+            config.bundleJava = true;
         } else if (IsFlag(argc, argv, i, "", "--skip-icon")) {
             config.skipIcon = true;
         } else if (IsFlag(argc, argv, i, "", "--clean")) {

@@ -11,6 +11,8 @@ struct Config {
     std::string tag;
     std::string proxyUrl;
     std::string lang;
+    bool bundleJava = false;
+    std::string javaPath;
     bool noDmg = false;
     bool skipIcon = false;
     bool clean = false;

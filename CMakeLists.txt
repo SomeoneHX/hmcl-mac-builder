@@ -25,6 +25,7 @@ set(SOURCES
     src/icon.cpp
     src/launcher.cpp
     src/appbundle.cpp
+    src/javabundle.cpp
     src/dmg.cpp
 )
 
