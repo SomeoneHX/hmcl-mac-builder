@@ -1,6 +1,8 @@
+// i18n.cpp — 中英文字符串表和国际化实现
 #include "i18n.h"
 #include <algorithm>
 
+// 英文帮助文本
 static const std::string en_usage =
     "Usage: {} [options]\n"
     "Options:\n"
@@ -20,6 +22,7 @@ static const std::string en_usage =
     "  --lang zh|en          Output language (default: auto-detect)\n"
     "  --verbose             Verbose output\n";
 
+// 中文帮助文本
 static const std::string zh_usage =
     "用法: {} [选项]\n"
     "选项:\n"
@@ -39,7 +42,9 @@ static const std::string zh_usage =
     "  --lang zh|en          输出语言（默认: 自动检测）\n"
     "  --verbose             启用详细日志\n";
 
+// 中文字符串映射表（英文键 → 中文翻译）
 static const std::map<std::string, std::string> zh_strings = {
+    // 主流程日志
     {"Removed {}", "已删除 {}"},
     {"Nothing to clean in {}", "在 {} 中没有可清理的内容"},
     {"Using temporary directory: {}", "正在使用临时目录: {}"},
@@ -64,6 +69,7 @@ static const std::map<std::string, std::string> zh_strings = {
     {"Temporary files kept at {}", "临时文件保留于 {}"},
     {"Done!", "完成！"},
 
+    // 参数解析错误
     {"--output requires a path argument", "--output 需要路径参数"},
     {"--app-name requires an argument", "--app-name 需要参数"},
     {"--jar requires a path argument", "--jar 需要路径参数"},
@@ -71,6 +77,7 @@ static const std::map<std::string, std::string> zh_strings = {
     {"--proxy requires a URL argument", "--proxy 需要 URL 参数"},
     {"Unknown option: {}", "未知选项: {}"},
 
+    // 网络请求相关
     {"Failed to initialize curl", "初始化 curl 失败"},
     {"Failed to open file for writing: {}", "无法打开文件写入: {}"},
     {"Download failed: {} ({})", "下载失败: {} ({})"},
@@ -80,6 +87,7 @@ static const std::map<std::string, std::string> zh_strings = {
     {"Failed to parse GitHub API response: {}", "解析 GitHub API 响应失败: {}"},
     {"curl request failed: {} ({})", "curl 请求失败: {} ({})"},
 
+    // 图标处理相关
     {"Downloading icon from GitHub...", "正在从 GitHub 下载图标..."},
     {"Failed to download icon file", "下载图标文件失败"},
     {"Icon downloaded to {}", "图标已下载到 {}"},
@@ -92,8 +100,10 @@ static const std::map<std::string, std::string> zh_strings = {
     {"Failed to generate ICNS file", "生成 ICNS 文件失败"},
     {"ICNS generated at {}", "ICNS 已生成于 {}"},
 
+    // 启动脚本相关
     {"Failed to write launcher script to {}", "写入启动脚本失败至 {}"},
 
+    // .app 打包相关
     {"Creating .app bundle at {}", "正在创建应用捆绑包于 {}"},
     {"Failed to write Info.plist to {}", "写入 Info.plist 失败至 {}"},
     {"Copied JAR to {}", "JAR 已复制到 {}"},
@@ -105,6 +115,7 @@ static const std::map<std::string, std::string> zh_strings = {
     {"Failed to copy launcher: {}", "复制启动脚本失败: {}"},
     {"App bundle created at {}", "应用捆绑包已创建于 {}"},
 
+    // DMG 相关
     {"create-dmg not found. Install with: brew install create-dmg",
      "未找到 create-dmg。请通过 brew install create-dmg 安装"},
     {"Skipping DMG creation.", "跳过 DMG 创建。"},
@@ -113,6 +124,7 @@ static const std::map<std::string, std::string> zh_strings = {
     {"create-dmg failed with exit code {}", "create-dmg 失败，退出码 {}"},
     {"DMG created at {}", "DMG 已创建于 {}"},
 
+    // Java 打包相关
     {"Detecting local Java...", "正在检测本机 Java..."},
     {"Found Java {} at {}", "找到 Java {} 于 {}"},
     {"Failed to find Java 17+. Please install JDK 17 or later, or use --java-path to specify a path.",
@@ -123,6 +135,7 @@ static const std::map<std::string, std::string> zh_strings = {
     {"--java-path requires a path argument", "--java-path 需要路径参数"},
 };
 
+// 根据 LANG 环境变量自动检测语言
 std::string I18n::detectLang() {
     const char* env = std::getenv("LANG");
     if (env) {
@@ -134,11 +147,13 @@ std::string I18n::detectLang() {
     return "en";
 }
 
+// 获取 I18n 单例实例
 I18n& I18n::instance() {
     static I18n inst;
     return inst;
 }
 
+// 切换当前语言，同时重新加载对应的字符串表
 void I18n::setLang(const std::string& lang) {
     currentLang_ = lang;
     strings_.clear();
@@ -150,6 +165,7 @@ void I18n::setLang(const std::string& lang) {
     }
 }
 
+// 根据键获取翻译字符串；若不存在则返回原键
 std::string I18n::t(const std::string& key) const {
     auto it = strings_.find(key);
     if (it != strings_.end()) {
@@ -158,6 +174,7 @@ std::string I18n::t(const std::string& key) const {
     return key;
 }
 
+// 将格式字符串中的 {} 依次替换为参数列表中对应的字符串
 std::string I18n::format(const std::string& fmt, const std::vector<std::string>& args) const {
     std::string result;
     size_t pos = 0;

@@ -1,3 +1,6 @@
+// main.cpp — 程序入口，编排整个构建流程：
+//   解析参数 → 获取 HMCL JAR → 生成图标 → 检测 Java → 生成启动脚本 →
+//   打包 .app → 创建 DMG → 清理临时文件
 #include "config.h"
 #include "version.h"
 #include "utils.h"
@@ -16,6 +19,7 @@
 static int savedArgc = 0;
 static char** savedArgv = nullptr;
 
+// 重建原始命令行参数字符串（含空格引号处理，嵌入启动脚本元信息）
 static std::string ReconstructArgs() {
     std::ostringstream ss;
     for (int i = 1; i < savedArgc; i++) {
@@ -29,6 +33,7 @@ static std::string ReconstructArgs() {
     return ss.str();
 }
 
+// 采集构建环境信息：工具版本、系统版本、编译器、架构等，用于嵌入启动脚本和 Info.plist
 static BuildInfo CollectBuildInfo(const Config& config, const JavaInfo& javaInfo) {
     BuildInfo info;
 
@@ -46,6 +51,7 @@ static BuildInfo CollectBuildInfo(const Config& config, const JavaInfo& javaInfo
 
     info.buildArgs = ReconstructArgs();
 
+    // 环境探测：系统版本、架构、编译器、构建工具版本
     info.macOSVersion = CaptureOutput("sw_vers -productVersion 2>/dev/null");
     info.macOSBuild = CaptureOutput("sw_vers -buildVersion 2>/dev/null");
     info.architecture = CaptureOutput("uname -m 2>/dev/null");
@@ -68,6 +74,7 @@ static BuildInfo CollectBuildInfo(const Config& config, const JavaInfo& javaInfo
     return info;
 }
 
+// 清理输出目录：删除 .app 文件夹和所有 .dmg 文件
 static bool CleanOutput(const Config& config) {
     fs::path appPath = config.outputDir / (config.appName + ".app");
     bool cleaned = false;
@@ -76,6 +83,7 @@ static bool CleanOutput(const Config& config) {
         LOG_INFO("Removed {}", appPath);
         cleaned = true;
     }
+    // 扫描输出目录中所有 .dmg 文件并删除
     for (auto& entry : fs::directory_iterator(config.outputDir)) {
         if (entry.path().extension() == ".dmg") {
             fs::remove(entry.path());
@@ -93,37 +101,45 @@ int main(int argc, char* argv[]) {
     savedArgc = argc;
     savedArgv = argv;
 
+    // 阶段 1：解析命令行参数
     Config config;
     if (!ParseArgs(argc, argv, config)) {
         PrintUsage(argv[0]);
         return EXIT_FAILURE;
     }
 
+    // 语言检测与国际化初始化
     if (config.lang.empty()) {
         config.lang = I18n::detectLang();
     }
     I18n::instance().setLang(config.lang);
 
+    // 创建输出目录
     fs::create_directories(config.outputDir);
 
+    // 如果仅需清理，执行清理后立即退出
     if (config.clean) {
         CleanOutput(config);
         return EXIT_SUCCESS;
     }
 
+    // 阶段 2：创建临时工作目录
     TempDir tempDir;
     LOG_VERBOSE("Using temporary directory: " << tempDir.path(), config.verbose);
 
+    // 阶段 3：获取 HMCL JAR（本地或从 GitHub 下载）
     ReleaseInfo release;
     std::string version;
     std::string jarPath;
 
     if (!config.jarPath.empty()) {
+        // 使用用户提供的本地 JAR
         jarPath = config.jarPath;
         version = config.tag.empty() ? "local" : config.tag;
         LOG_VERBOSE("Using local JAR: " << jarPath, config.verbose);
         LOG_VERBOSE("Version set to: " << version, config.verbose);
     } else {
+        // 从 GitHub API 获取最新 Release 信息
         LOG_INFO("Fetching latest release info from GitHub...");
         release = GetLatestRelease(config.tag);
         if (!release.valid) {
@@ -139,19 +155,23 @@ int main(int argc, char* argv[]) {
         LOG_INFO("Found version: {}", version);
     }
 
+    // 定义临时目录中的中间文件路径
     fs::path icnsPath = tempDir.path() / (config.appName + ".icns");
     fs::path launcherPath = tempDir.path() / "launch.sh";
     fs::path jarDestPath = tempDir.path() / (config.appName + ".jar");
 
+    // 阶段 4：并行执行耗时任务——图标处理和 JAR 下载
     std::future<bool> iconFuture;
     std::future<bool> jarFuture;
 
+    // 异步下载并转换图标（跳过图标时不做）
     if (!config.skipIcon) {
         iconFuture = std::async(std::launch::async, [&]() {
             return ProcessIcon(icnsPath, config.verbose, config.proxyUrl);
         });
     }
 
+    // 异步下载 JAR（使用本地 JAR 时不需要）
     if (config.jarPath.empty()) {
         LOG_INFO("Downloading HMCL {}...", version);
         jarFuture = std::async(std::launch::async, [&]() {
@@ -160,6 +180,7 @@ int main(int argc, char* argv[]) {
         jarPath = jarDestPath.string();
     }
 
+    // 等待图标处理完成（非关键，失败则警告后继续）
     if (!config.skipIcon) {
         bool iconOk = iconFuture.get();
         if (!iconOk) {
@@ -167,8 +188,9 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // 等待 JAR 下载完成（关键，失败则退出）
     if (!config.jarPath.empty()) {
-        // using local jar, nothing to wait for
+        // 使用本地 JAR，无需等待
     } else {
         bool jarOk = jarFuture.get();
         if (!jarOk) {
@@ -178,6 +200,7 @@ int main(int argc, char* argv[]) {
         LOG_INFO("JAR downloaded successfully");
     }
 
+    // 阶段 5：检测 Java 运行时（仅当需要打包 Java 时）
     std::string javaHome;
     JavaInfo javaInfo;
     if (config.bundleJava) {
@@ -191,25 +214,30 @@ int main(int argc, char* argv[]) {
         javaHome = javaInfo.javaHome.string();
     }
 
+    // 阶段 6：采集构建元信息
     BuildInfo buildInfo = CollectBuildInfo(config, javaInfo);
 
+    // 阶段 7：生成启动脚本
     LOG_INFO("Generating launcher script...");
     if (!GenerateLauncherScript(launcherPath, config.appName, version, buildInfo, config.bundleJava)) {
         LOG_ERROR("Failed to generate launcher script");
         return EXIT_FAILURE;
     }
 
+    // 阶段 8：组装 .app 包
     LOG_INFO("Creating app bundle...");
     if (!CreateAppBundle(config, jarPath, icnsPath, launcherPath, version, buildInfo, config.verbose, javaHome)) {
         LOG_ERROR("Failed to create app bundle");
         return EXIT_FAILURE;
     }
 
+    // 阶段 9：创建 DMG（可选）
     if (!config.noDmg) {
         LOG_INFO("Creating DMG...");
         CreateDMG(config, version, config.verbose);
     }
 
+    // 阶段 10：清理临时文件
     if (!config.keepTemp) {
         LOG_VERBOSE("Cleaning up temporary directory", config.verbose);
     } else {
