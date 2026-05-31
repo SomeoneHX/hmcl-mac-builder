@@ -1,4 +1,5 @@
 #include "config.h"
+#include "version.h"
 #include "utils.h"
 #include "network.h"
 #include "icon.h"
@@ -129,7 +130,7 @@ int main(int argc, char* argv[]) {
     }
 
     LOG_INFO("Creating app bundle...");
-    if (!CreateAppBundle(config, jarPath, icnsPath, launcherPath, version, config.verbose)) {
+    if (!CreateAppBundle(config, jarPath, icnsPath, launcherPath, HMCL_MAC_BUILDER_VERSION, config.verbose)) {
         LOG_ERROR("Failed to create app bundle");
         return EXIT_FAILURE;
     }

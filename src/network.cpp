@@ -1,4 +1,5 @@
 #include "network.h"
+#include "version.h"
 #include "utils.h"
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
@@ -38,7 +39,7 @@ static std::string CurlGet(const std::string& url, bool followRedirect = true) {
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "hmcl-mac-builder/1.0");
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "hmcl-mac-builder/" HMCL_MAC_BUILDER_VERSION);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, followRedirect ? 1L : 0L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
@@ -75,7 +76,7 @@ bool DownloadFile(const std::string& url, const fs::path& dest, const std::strin
     curl_easy_setopt(curl, CURLOPT_URL, effectiveUrl.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, FileWriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "hmcl-mac-builder/1.0");
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "hmcl-mac-builder/" HMCL_MAC_BUILDER_VERSION);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 120L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);

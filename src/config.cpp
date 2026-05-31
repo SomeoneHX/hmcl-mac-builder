@@ -1,4 +1,5 @@
 #include "config.h"
+#include "version.h"
 #include "utils.h"
 #include "i18n.h"
 #include <iostream>
@@ -84,5 +85,5 @@ void PrintUsage(const char* programName) {
 }
 
 void PrintVersion() {
-    std::cout << I18n::instance().t("hmcl-mac-builder version {}\n", "1.0.0");
+    std::cout << I18n::instance().t("hmcl-mac-builder version {}\n", HMCL_MAC_BUILDER_VERSION);
 }
