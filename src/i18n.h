@@ -41,16 +41,24 @@ private:
     std::map<std::string, std::string> strings_;
 };
 
+namespace Color {
+    constexpr auto Reset  = "\033[0m";
+    constexpr auto Red    = "\033[31m";
+    constexpr auto Green  = "\033[32m";
+    constexpr auto Yellow = "\033[33m";
+    constexpr auto Cyan   = "\033[36m";
+}
+
 inline void logInfo(const std::string& msg) {
-    std::cout << "[INFO] " << msg << std::endl;
+    std::cout << Color::Green << "[INFO] " << Color::Reset << msg << std::endl;
 }
 
 inline void logWarning(const std::string& msg) {
-    std::cerr << "[WARNING] " << msg << std::endl;
+    std::cerr << Color::Yellow << "[WARNING] " << Color::Reset << msg << std::endl;
 }
 
 inline void logError(const std::string& msg) {
-    std::cerr << "[ERROR] " << msg << std::endl;
+    std::cerr << Color::Red << "[ERROR] " << Color::Reset << msg << std::endl;
 }
 
 #define LOG_INFO(fmt, ...) do { \
@@ -66,5 +74,5 @@ inline void logError(const std::string& msg) {
 } while(0)
 
 #define LOG_VERBOSE(msg, verbose) do { \
-    if ((verbose)) std::cout << "[VERBOSE] " << msg << std::endl; \
+    if ((verbose)) std::cout << Color::Cyan << "[VERBOSE] " << Color::Reset << msg << std::endl; \
 } while(0)
