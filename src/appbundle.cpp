@@ -97,6 +97,12 @@ bool CreateAppBundle(const Config& config, const fs::path& jarPath,
 
     LOG_VERBOSE("Creating .app bundle at " << appDir, verbose);
 
+    // 如果已存在旧的 .app 包，先删除
+    if (fs::exists(appDir)) {
+        LOG_VERBOSE("Removing existing .app bundle at " << appDir, verbose);
+        fs::remove_all(appDir);
+    }
+
     // 创建标准 .app 目录结构
     fs::create_directories(macosDir);
     fs::create_directories(resourcesDir);

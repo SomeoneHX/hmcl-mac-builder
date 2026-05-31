@@ -28,6 +28,11 @@ bool CreateDMG(const Config& config, const std::string& version, bool verbose, c
         return false;
     }
 
+    if (fs::exists(dmgPath)) {
+        LOG_VERBOSE("Removing existing DMG at " << dmgPath, verbose);
+        fs::remove(dmgPath);
+    }
+
     std::ostringstream cmd;
     cmd << "create-dmg";
     cmd << " --volname \"" << EscapeShellArg(config.appName) << " Installer\"";
