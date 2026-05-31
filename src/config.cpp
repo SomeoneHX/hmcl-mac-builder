@@ -1,5 +1,6 @@
 #include "config.h"
 #include "utils.h"
+#include "i18n.h"
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
@@ -13,8 +14,18 @@ static bool HasArg(int argc, char* argv[], int i) {
 }
 
 bool ParseArgs(int argc, char* argv[], Config& config) {
+    config.lang = I18n::detectLang();
+    I18n::instance().setLang(config.lang);
+
     for (int i = 1; i < argc; i++) {
-        if (IsFlag(argc, argv, i, "-h", "--help")) {
+        if (IsFlag(argc, argv, i, "", "--lang")) {
+            if (!HasArg(argc, argv, i)) {
+                LOG_ERROR("--lang requires an argument (en or zh)");
+                return false;
+            }
+            config.lang = argv[++i];
+            I18n::instance().setLang(config.lang);
+        } else if (IsFlag(argc, argv, i, "-h", "--help")) {
             PrintUsage(argv[0]);
             std::exit(0);
         } else if (IsFlag(argc, argv, i, "-v", "--version")) {
@@ -61,7 +72,7 @@ bool ParseArgs(int argc, char* argv[], Config& config) {
         } else if (IsFlag(argc, argv, i, "", "--verbose")) {
             config.verbose = true;
         } else {
-            LOG_ERROR("Unknown option: " << argv[i]);
+            LOG_ERROR("Unknown option: {}", argv[i]);
             return false;
         }
     }
@@ -69,22 +80,9 @@ bool ParseArgs(int argc, char* argv[], Config& config) {
 }
 
 void PrintUsage(const char* programName) {
-    std::cout << "Usage: " << programName << " [options]\n"
-              << "Options:\n"
-              << "  -h, --help            Show this help message\n"
-              << "  -v, --version         Show version information\n"
-              << "  -o, --output DIR      Output directory (default: ./output)\n"
-              << "  --app-name NAME       Application name (default: HMCL)\n"
-              << "  --jar PATH            Local JAR file path (default: download from GitHub)\n"
-              << "  --tag VERSION         HMCL version tag (default: latest stable)\n"
-              << "  --no-dmg              Only generate .app, skip DMG\n"
-              << "  --skip-icon           Skip icon conversion\n"
-              << "  --clean               Clean previous build files\n"
-              << "  --proxy URL           Use proxy for GitHub requests (e.g. https://v4.gh-proxy.org/)\n"
-              << "  --keep-temp           Keep temporary files\n"
-              << "  --verbose             Verbose output\n";
+    std::cout << I18n::instance().t("usage_text", programName);
 }
 
 void PrintVersion() {
-    std::cout << "hmcl-mac-builder version 1.0.0\n";
+    std::cout << I18n::instance().t("hmcl-mac-builder version {}\n", "1.0.0");
 }

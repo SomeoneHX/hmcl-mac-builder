@@ -17,6 +17,7 @@ endif()
 set(SOURCES
     src/main.cpp
     src/config.cpp
+    src/i18n.cpp
     src/utils.cpp
     src/network.cpp
     src/icon.cpp

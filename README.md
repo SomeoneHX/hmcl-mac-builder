@@ -11,6 +11,7 @@
 - 组装完整的 `.app` 目录结构（`Info.plist`、`Resources`、`MacOS`）
 - 可选调用 `create-dmg` 生成 `.dmg` 磁盘映像
 - 支持自定义应用名称、输出目录、版本标签
+- 中英双语命令行输出，支持自动检测与手动切换语言
 
 ## 环境要求
 
@@ -70,6 +71,10 @@ cmake --build build
 
 # 清理之前构建的文件
 ./build/hmcl-mac-builder --clean
+
+# 指定输出语言（默认自动检测 LANG 环境变量）
+./build/hmcl-mac-builder --lang zh
+./build/hmcl-mac-builder --lang en
 ```
 
 ## 命令行选项
@@ -87,6 +92,7 @@ cmake --build build
 | `--clean` | 清理之前的构建文件 | 不清除 |
 | `--proxy URL` | GitHub 下载代理前缀（仅对文件下载生效，API 请求不使用） | 不使用 |
 | `--keep-temp` | 构建完成后保留临时文件 | 自动删除 |
+| `--lang zh\|en` | 输出语言（zh = 中文，en = 英文） | 自动检测 `LANG` 环境变量 |
 | `--verbose` | 启用详细日志输出 | 仅显示概要 |
 
 ## 工作原理
@@ -107,6 +113,7 @@ hmcl-mac-builder/
 └── src/
     ├── main.cpp            # 入口，编排构建流水线
     ├── config.h / .cpp     # Config 结构体、CLI 参数解析
+    ├── i18n.h / .cpp       # 国际化支持（中英双语，--lang 参数）
     ├── utils.h / .cpp      # 工具函数：日志、文件操作、临时目录
     ├── network.h / .cpp    # HTTP 下载 + GitHub API Release 查询
     ├── icon.h / .cpp       # 图标下载与 ICNS 格式转换

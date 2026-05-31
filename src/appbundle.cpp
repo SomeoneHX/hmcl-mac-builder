@@ -33,7 +33,7 @@ static bool WriteInfoPlist(const fs::path& plistPath, const std::string& appName
     plist << "</plist>\n";
 
     if (!WriteFile(plistPath, plist.str())) {
-        LOG_ERROR("Failed to write Info.plist to " << plistPath);
+        LOG_ERROR("Failed to write Info.plist to {}", plistPath);
         return false;
     }
     return true;
@@ -62,7 +62,7 @@ bool CreateAppBundle(const Config& config, const fs::path& jarPath,
         fs::copy_file(jarPath, jarDest, fs::copy_options::overwrite_existing);
         LOG_VERBOSE("Copied JAR to " << jarDest, verbose);
     } catch (const fs::filesystem_error& e) {
-        LOG_ERROR("Failed to copy JAR: " << e.what());
+        LOG_ERROR("Failed to copy JAR: {}", e.what());
         return false;
     }
 
@@ -72,7 +72,7 @@ bool CreateAppBundle(const Config& config, const fs::path& jarPath,
             fs::copy_file(icnsPath, icnsDest, fs::copy_options::overwrite_existing);
             LOG_VERBOSE("Copied ICNS to " << icnsDest, verbose);
         } catch (const fs::filesystem_error& e) {
-            LOG_ERROR("Failed to copy ICNS: " << e.what());
+            LOG_ERROR("Failed to copy ICNS: {}", e.what());
             return false;
         }
     } else {
@@ -87,10 +87,10 @@ bool CreateAppBundle(const Config& config, const fs::path& jarPath,
             fs::perms::others_read | fs::perms::others_exec);
         LOG_VERBOSE("Copied launcher to " << launcherDest, verbose);
     } catch (const fs::filesystem_error& e) {
-        LOG_ERROR("Failed to copy launcher: " << e.what());
+        LOG_ERROR("Failed to copy launcher: {}", e.what());
         return false;
     }
 
-    LOG_INFO("App bundle created at " << appDir);
+    LOG_INFO("App bundle created at {}", appDir);
     return true;
 }

@@ -23,7 +23,7 @@ bool GenerateLauncherScript(const fs::path& outputPath, const std::string& appNa
     script << "exec /usr/bin/java -jar \"$JAR\"\n";
 
     if (!WriteFile(outputPath, script.str())) {
-        LOG_ERROR("Failed to write launcher script to " << outputPath);
+        LOG_ERROR("Failed to write launcher script to {}", outputPath);
         return false;
     }
 

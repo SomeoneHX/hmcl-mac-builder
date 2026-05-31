@@ -14,7 +14,7 @@ bool CreateDMG(const Config& config, const std::string& version, bool verbose) {
     fs::path dmgPath = config.outputDir / (config.appName + "-" + version + ".dmg");
 
     if (!fs::exists(appPath)) {
-        LOG_ERROR("App bundle not found at " << appPath);
+        LOG_ERROR("App bundle not found at {}", appPath);
         return false;
     }
 
@@ -33,10 +33,10 @@ bool CreateDMG(const Config& config, const std::string& version, bool verbose) {
 
     int rc = RunCommand(cmd.str());
     if (rc != 0) {
-        LOG_ERROR("create-dmg failed with exit code " << rc);
+        LOG_ERROR("create-dmg failed with exit code {}", rc);
         return false;
     }
 
-    LOG_INFO("DMG created at " << dmgPath);
+    LOG_INFO("DMG created at {}", dmgPath);
     return true;
 }

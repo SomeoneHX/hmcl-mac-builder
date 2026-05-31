@@ -68,7 +68,7 @@ bool ProcessIcon(const fs::path& outputPath, bool verbose, const std::string& pr
                           "\" --out \"" + outPng.string() + "\" >/dev/null 2>&1";
         LOG_VERBOSE("Running: " << cmd, verbose);
         if (RunCommand(cmd) != 0) {
-            LOG_ERROR("Failed to resize icon to " << scaleSize << "x" << scaleSize);
+            LOG_ERROR("Failed to resize icon to {}x{}", scaleSize, scaleSize);
             return false;
         }
     }

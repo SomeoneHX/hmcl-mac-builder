@@ -10,6 +10,7 @@ struct Config {
     std::string jarPath;
     std::string tag;
     std::string proxyUrl;
+    std::string lang;
     bool noDmg = false;
     bool skipIcon = false;
     bool clean = false;

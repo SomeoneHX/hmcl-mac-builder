@@ -3,12 +3,8 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include "i18n.h"
 namespace fs = std::filesystem;
-
-#define LOG_INFO(msg) do { std::cout << "[INFO] " << msg << std::endl; } while(0)
-#define LOG_WARNING(msg) do { std::cerr << "[WARNING] " << msg << std::endl; } while(0)
-#define LOG_ERROR(msg) do { std::cerr << "[ERROR] " << msg << std::endl; } while(0)
-#define LOG_VERBOSE(msg, verbose) do { if ((verbose)) std::cout << "[VERBOSE] " << msg << std::endl; } while(0)
 
 int RunCommand(const std::string& cmd);
 bool RunCommandCapture(const std::string& cmd, std::string& output);

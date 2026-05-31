@@ -15,18 +15,18 @@ static bool CleanOutput(const Config& config) {
     bool cleaned = false;
     if (fs::exists(appPath)) {
         fs::remove_all(appPath);
-        LOG_INFO("Removed " << appPath);
+        LOG_INFO("Removed {}", appPath);
         cleaned = true;
     }
     for (auto& entry : fs::directory_iterator(config.outputDir)) {
         if (entry.path().extension() == ".dmg") {
             fs::remove(entry.path());
-            LOG_INFO("Removed " << entry.path());
+            LOG_INFO("Removed {}", entry.path());
             cleaned = true;
         }
     }
     if (!cleaned) {
-        LOG_INFO("Nothing to clean in " << config.outputDir);
+        LOG_INFO("Nothing to clean in {}", config.outputDir);
     }
     return true;
 }
@@ -37,6 +37,11 @@ int main(int argc, char* argv[]) {
         PrintUsage(argv[0]);
         return EXIT_FAILURE;
     }
+
+    if (config.lang.empty()) {
+        config.lang = I18n::detectLang();
+    }
+    I18n::instance().setLang(config.lang);
 
     fs::create_directories(config.outputDir);
 
@@ -70,7 +75,7 @@ int main(int argc, char* argv[]) {
         }
         version = release.version;
         jarPath = tempDir.path() / (config.appName + ".jar");
-        LOG_INFO("Found version: " << version);
+        LOG_INFO("Found version: {}", version);
     }
 
     fs::path icnsPath = tempDir.path() / (config.appName + ".icns");
@@ -87,7 +92,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (config.jarPath.empty()) {
-        LOG_INFO("Downloading HMCL " << version << "...");
+        LOG_INFO("Downloading HMCL {}...", version);
         jarFuture = std::async(std::launch::async, [&]() {
             return DownloadFile(release.jarUrl, jarDestPath, config.proxyUrl);
         });
@@ -138,7 +143,7 @@ int main(int argc, char* argv[]) {
         LOG_VERBOSE("Cleaning up temporary directory", config.verbose);
     } else {
         tempDir.release();
-        LOG_INFO("Temporary files kept at " << tempDir.path());
+        LOG_INFO("Temporary files kept at {}", tempDir.path());
     }
 
     LOG_INFO("Done!");

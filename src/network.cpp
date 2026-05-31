@@ -45,8 +45,7 @@ static std::string CurlGet(const std::string& url, bool followRedirect = true) {
 
     CURLcode res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
-        std::cerr << "[ERROR] curl request failed: " << curl_easy_strerror(res)
-                  << " (" << url << ")" << std::endl;
+        LOG_ERROR("curl request failed: {} ({})", curl_easy_strerror(res), url);
         response.clear();
     }
 
@@ -67,7 +66,7 @@ bool DownloadFile(const std::string& url, const fs::path& dest, const std::strin
 
     FILE* fp = fopen(dest.c_str(), "wb");
     if (!fp) {
-        LOG_ERROR("Failed to open file for writing: " << dest);
+        LOG_ERROR("Failed to open file for writing: {}", dest);
         curl_easy_cleanup(curl);
         return false;
     }
@@ -85,7 +84,7 @@ bool DownloadFile(const std::string& url, const fs::path& dest, const std::strin
     fclose(fp);
 
     if (res != CURLE_OK) {
-        LOG_ERROR("Download failed: " << curl_easy_strerror(res) << " (" << url << ")");
+        LOG_ERROR("Download failed: {} ({})", curl_easy_strerror(res), url);
         curl_easy_cleanup(curl);
         fs::remove(dest);
         return false;
@@ -96,7 +95,7 @@ bool DownloadFile(const std::string& url, const fs::path& dest, const std::strin
     curl_easy_cleanup(curl);
 
     if (statusCode != 200) {
-        LOG_ERROR("Download returned HTTP " << statusCode << " (" << url << ")");
+        LOG_ERROR("Download returned HTTP {} ({})", statusCode, url);
         fs::remove(dest);
         return false;
     }
@@ -141,7 +140,7 @@ ReleaseInfo GetLatestRelease(const std::string& tag) {
             }
         }
     } catch (const json::exception& e) {
-        LOG_ERROR("Failed to parse GitHub API response: " << e.what());
+        LOG_ERROR("Failed to parse GitHub API response: {}", e.what());
         info.valid = false;
     }
 
