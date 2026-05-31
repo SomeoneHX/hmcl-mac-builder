@@ -4,6 +4,24 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
+struct BuildInfo {
+    std::string builderVersion;
+    std::string builderName;
+    std::string builderRepo;
+    std::string buildDate;
+    std::string buildTime;
+    std::string buildArgs;
+    std::string macOSVersion;
+    std::string macOSBuild;
+    std::string architecture;
+    std::string compilerVersion;
+    std::string cmakeVersion;
+    std::string xcodeVersion;
+    std::string javaVersion;
+    std::string javaHome;
+    std::string createDmgVersion;
+};
+
 struct Config {
     fs::path outputDir = fs::current_path() / "output";
     std::string appName = "HMCL";

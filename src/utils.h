@@ -11,6 +11,8 @@ bool RunCommandCapture(const std::string& cmd, std::string& output);
 bool Which(const std::string& program);
 bool WriteFile(const fs::path& path, const std::string& content);
 bool ReadFile(const fs::path& path, std::string& content);
+std::string Trim(const std::string& s);
+std::string CaptureOutput(const std::string& cmd);
 
 class TempDir {
 public:

@@ -46,6 +46,19 @@ bool ReadFile(const fs::path& path, std::string& content) {
     return ifs.good();
 }
 
+std::string Trim(const std::string& s) {
+    size_t start = s.find_first_not_of(" \t\n\r\f\v");
+    if (start == std::string::npos) return "";
+    size_t end = s.find_last_not_of(" \t\n\r\f\v");
+    return s.substr(start, end - start + 1);
+}
+
+std::string CaptureOutput(const std::string& cmd) {
+    std::string out;
+    RunCommandCapture(cmd, out);
+    return Trim(out);
+}
+
 TempDir::TempDir() {
     std::string pattern = "/tmp/hmcl-build-XXXXXX";
     char* tmpl = strdup(pattern.c_str());

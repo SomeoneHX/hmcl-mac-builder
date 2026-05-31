@@ -11,6 +11,62 @@
 #include <future>
 #include <cstdlib>
 #include <ctime>
+#include <sstream>
+
+static int savedArgc = 0;
+static char** savedArgv = nullptr;
+
+static std::string ReconstructArgs() {
+    std::ostringstream ss;
+    for (int i = 1; i < savedArgc; i++) {
+        std::string arg(savedArgv[i]);
+        if (arg.find(' ') != std::string::npos) {
+            ss << " \"" << arg << "\"";
+        } else {
+            ss << " " << arg;
+        }
+    }
+    return ss.str();
+}
+
+static BuildInfo CollectBuildInfo(const Config& config, const JavaInfo& javaInfo) {
+    BuildInfo info;
+
+    info.builderVersion = HMCL_MAC_BUILDER_VERSION;
+    info.builderName = HMCL_MAC_BUILDER_NAME;
+    info.builderRepo = HMCL_MAC_BUILDER_REPO;
+
+    std::time_t now = std::time(nullptr);
+    char dateBuf[11];
+    std::strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", std::localtime(&now));
+    info.buildDate = dateBuf;
+    char timeBuf[9];
+    std::strftime(timeBuf, sizeof(timeBuf), "%H:%M:%S", std::localtime(&now));
+    info.buildTime = timeBuf;
+
+    info.buildArgs = ReconstructArgs();
+
+    info.macOSVersion = CaptureOutput("sw_vers -productVersion 2>/dev/null");
+    info.macOSBuild = CaptureOutput("sw_vers -buildVersion 2>/dev/null");
+    info.architecture = CaptureOutput("uname -m 2>/dev/null");
+    info.compilerVersion = CaptureOutput("c++ --version 2>/dev/null | head -1");
+    info.cmakeVersion = CaptureOutput("cmake --version 2>/dev/null | head -1");
+
+    std::string xcode = CaptureOutput("xcodebuild -version 2>/dev/null | head -1");
+    if (!xcode.empty()) {
+        std::string xcodeBuild = CaptureOutput("xcodebuild -version 2>/dev/null | tail -1");
+        info.xcodeVersion = xcode + " (" + xcodeBuild + ")";
+    }
+
+    if (javaInfo.valid) {
+        info.javaVersion = javaInfo.version;
+        info.javaHome = javaInfo.javaHome.string();
+    }
+
+    info.createDmgVersion = CaptureOutput("create-dmg --version 2>/dev/null");
+
+    return info;
+}
 
 static bool CleanOutput(const Config& config) {
     fs::path appPath = config.outputDir / (config.appName + ".app");
@@ -34,6 +90,9 @@ static bool CleanOutput(const Config& config) {
 }
 
 int main(int argc, char* argv[]) {
+    savedArgc = argc;
+    savedArgv = argv;
+
     Config config;
     if (!ParseArgs(argc, argv, config)) {
         PrintUsage(argv[0]);
@@ -120,9 +179,10 @@ int main(int argc, char* argv[]) {
     }
 
     std::string javaHome;
+    JavaInfo javaInfo;
     if (config.bundleJava) {
         LOG_INFO("Detecting local Java...");
-        JavaInfo javaInfo = FindJava(config.javaPath);
+        javaInfo = FindJava(config.javaPath);
         if (!javaInfo.valid) {
             LOG_ERROR("Failed to find Java 17+. Please install JDK 17 or later, or use --java-path to specify a path.");
             return EXIT_FAILURE;
@@ -131,19 +191,16 @@ int main(int argc, char* argv[]) {
         javaHome = javaInfo.javaHome.string();
     }
 
-    std::time_t now = std::time(nullptr);
-    char dateBuf[16];
-    std::strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", std::localtime(&now));
-    std::string buildDate(dateBuf);
+    BuildInfo buildInfo = CollectBuildInfo(config, javaInfo);
 
     LOG_INFO("Generating launcher script...");
-    if (!GenerateLauncherScript(launcherPath, config.appName, version, buildDate, config.bundleJava)) {
+    if (!GenerateLauncherScript(launcherPath, config.appName, version, buildInfo, config.bundleJava)) {
         LOG_ERROR("Failed to generate launcher script");
         return EXIT_FAILURE;
     }
 
     LOG_INFO("Creating app bundle...");
-    if (!CreateAppBundle(config, jarPath, icnsPath, launcherPath, HMCL_MAC_BUILDER_VERSION, config.verbose, javaHome)) {
+    if (!CreateAppBundle(config, jarPath, icnsPath, launcherPath, version, buildInfo, config.verbose, javaHome)) {
         LOG_ERROR("Failed to create app bundle");
         return EXIT_FAILURE;
     }

@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 project(hmcl-mac-builder VERSION 1.0.0 LANGUAGES CXX)
 
+set(HMCL_MAC_BUILDER_REPO "https://github.com/SomeoneHX/hmcl-mac-builder")
+set(HMCL_MAC_BUILDER_NAME "hmcl-mac-builder")
+
 configure_file(src/version.h.in ${CMAKE_CURRENT_BINARY_DIR}/version.h)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -37,6 +40,11 @@ target_link_libraries(hmcl-mac-builder
 )
 
 target_include_directories(hmcl-mac-builder PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+target_compile_definitions(hmcl-mac-builder PRIVATE
+    HMCL_MAC_BUILDER_REPO="${HMCL_MAC_BUILDER_REPO}"
+    HMCL_MAC_BUILDER_NAME="${HMCL_MAC_BUILDER_NAME}"
+)
 
 if(APPLE)
     target_compile_definitions(hmcl-mac-builder PRIVATE __MACOS__)
