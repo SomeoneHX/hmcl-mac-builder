@@ -84,7 +84,7 @@ bool DownloadFile(const std::string& url, const fs::path& dest, const std::strin
     fclose(fp);
 
     if (res != CURLE_OK) {
-        LOG_ERROR("Download failed: {} ({})", curl_easy_strerror(res), url);
+        LOG_ERROR("Download failed: {} ({})", curl_easy_strerror(res), effectiveUrl);
         curl_easy_cleanup(curl);
         fs::remove(dest);
         return false;
@@ -95,7 +95,7 @@ bool DownloadFile(const std::string& url, const fs::path& dest, const std::strin
     curl_easy_cleanup(curl);
 
     if (statusCode != 200) {
-        LOG_ERROR("Download returned HTTP {} ({})", statusCode, url);
+        LOG_ERROR("Download returned HTTP {} ({})", statusCode, effectiveUrl);
         fs::remove(dest);
         return false;
     }
