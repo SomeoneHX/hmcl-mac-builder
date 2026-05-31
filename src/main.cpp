@@ -81,14 +81,14 @@ int main(int argc, char* argv[]) {
 
     if (!config.skipIcon) {
         iconFuture = std::async(std::launch::async, [&]() {
-            return ProcessIcon(icnsPath, config.verbose);
+            return ProcessIcon(icnsPath, config.verbose, config.proxyUrl);
         });
     }
 
     if (config.jarPath.empty()) {
         LOG_INFO("Downloading HMCL " << version << "...");
         jarFuture = std::async(std::launch::async, [&]() {
-            return DownloadFile(release.jarUrl, jarDestPath);
+            return DownloadFile(release.jarUrl, jarDestPath, config.proxyUrl);
         });
         jarPath = jarDestPath.string();
     }

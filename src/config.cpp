@@ -52,6 +52,12 @@ bool ParseArgs(int argc, char* argv[], Config& config) {
             config.clean = true;
         } else if (IsFlag(argc, argv, i, "", "--keep-temp")) {
             config.keepTemp = true;
+        } else if (IsFlag(argc, argv, i, "", "--proxy")) {
+            if (!HasArg(argc, argv, i)) {
+                LOG_ERROR("--proxy requires a URL argument");
+                return false;
+            }
+            config.proxyUrl = argv[++i];
         } else if (IsFlag(argc, argv, i, "", "--verbose")) {
             config.verbose = true;
         } else {
@@ -74,6 +80,7 @@ void PrintUsage(const char* programName) {
               << "  --no-dmg              Only generate .app, skip DMG\n"
               << "  --skip-icon           Skip icon conversion\n"
               << "  --clean               Clean previous build files\n"
+              << "  --proxy URL           Use proxy for GitHub requests (e.g. https://v4.gh-proxy.org/)\n"
               << "  --keep-temp           Keep temporary files\n"
               << "  --verbose             Verbose output\n";
 }

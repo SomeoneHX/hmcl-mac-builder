@@ -9,6 +9,7 @@ struct Config {
     std::string appName = "HMCL";
     std::string jarPath;
     std::string tag;
+    std::string proxyUrl;
     bool noDmg = false;
     bool skipIcon = false;
     bool clean = false;

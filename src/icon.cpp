@@ -30,14 +30,14 @@ static bool ConvertIcoToPng(const fs::path& icoPath, const fs::path& pngPath, bo
     return false;
 }
 
-bool ProcessIcon(const fs::path& outputPath, bool verbose) {
+bool ProcessIcon(const fs::path& outputPath, bool verbose, const std::string& proxyUrl) {
     fs::path tempDir = outputPath.parent_path();
     fs::path icoPath = tempDir / "HMCL.ico";
     fs::path iconsetDir = tempDir / "HMCL.iconset";
     fs::path pngBase = tempDir / "HMCL.png";
 
     LOG_VERBOSE("Downloading icon from GitHub...", verbose);
-    if (!DownloadFile(GetIconUrl(), icoPath)) {
+    if (!DownloadFile(GetIconUrl(), icoPath, proxyUrl)) {
         LOG_ERROR("Failed to download icon file");
         return false;
     }

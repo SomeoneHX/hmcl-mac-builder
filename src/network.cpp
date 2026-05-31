@@ -18,6 +18,18 @@ static size_t FileWriteCallback(void* ptr, size_t size, size_t nmemb, FILE* stre
     return fwrite(ptr, size, nmemb, stream);
 }
 
+static bool IsGithubUrl(const std::string& url) {
+    return url.find("github.com") != std::string::npos
+        || url.find("githubusercontent.com") != std::string::npos;
+}
+
+static std::string ApplyProxy(const std::string& url, const std::string& proxyUrl) {
+    if (!proxyUrl.empty() && IsGithubUrl(url)) {
+        return proxyUrl + url;
+    }
+    return url;
+}
+
 static std::string CurlGet(const std::string& url, bool followRedirect = true) {
     CURL* curl = curl_easy_init();
     if (!curl) return "";
@@ -46,7 +58,7 @@ std::string HttpGet(const std::string& url) {
     return CurlGet(url);
 }
 
-bool DownloadFile(const std::string& url, const fs::path& dest) {
+bool DownloadFile(const std::string& url, const fs::path& dest, const std::string& proxyUrl) {
     CURL* curl = curl_easy_init();
     if (!curl) {
         LOG_ERROR("Failed to initialize curl");
@@ -60,7 +72,8 @@ bool DownloadFile(const std::string& url, const fs::path& dest) {
         return false;
     }
 
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    std::string effectiveUrl = ApplyProxy(url, proxyUrl);
+    curl_easy_setopt(curl, CURLOPT_URL, effectiveUrl.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, FileWriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
     curl_easy_setopt(curl, CURLOPT_USERAGENT, "hmcl-mac-builder/1.0");
